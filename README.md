@@ -1,8 +1,8 @@
-[![CircleCI](https://circleci.com/gh/giantswarm/conditionshandler.svg?style=shield)](https://circleci.com/gh/giantswarm/conditionshandler)
+[![CircleCI](https://circleci.com/gh/giantswarm/conditions-handler.svg?style=shield)](https://circleci.com/gh/giantswarm/conditions-handler)
 
-# conditionshandler
+# conditions-handler
 
-`giantswarm/conditionshandler` module contains implementations of provider-independent
+`giantswarm/conditions-handler` module contains implementations of provider-independent
 condition handlers that can be plugged into multiple operators, or even used from
 other non-operator tools, like CLI apps.
 
