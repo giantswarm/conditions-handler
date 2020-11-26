@@ -76,7 +76,7 @@ lint:
 ## test: runs go test with default values
 test:
 	@echo "====> $@"
-	go test -ldflags "$(LDFLAGS)" -race ./...
+	go test -count=1 -ldflags "$(LDFLAGS)" -race ./...
 
 .PHONY: build-docker
 ## build-docker: builds docker image to registry
