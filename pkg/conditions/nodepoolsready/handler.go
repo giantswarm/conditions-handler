@@ -81,15 +81,14 @@ func (h *Handler) ensureCreated(ctx context.Context, object conditions.Object) e
 
 func (h *Handler) getNodePools(ctx context.Context, cluster *capi.Cluster) ([]capiconditions.Getter, error) {
 	machinePools, err := internal.ListMachinePoolsByMetadata(ctx, h.ctrlClient, cluster.ObjectMeta)
-	if apierrors.IsNotFound(err) || len(machinePools.Items) == 0 {
-		// set
+	if apierrors.IsNotFound(err) || (err != nil && machinePools != nil && len(machinePools.Items) == 0) {
+		// not finding any node pools can be a valid scenario
 		return nil, nil
 	} else if err != nil {
 		return nil, microerror.Mask(err)
 	}
 
-	// We need a slice of Getter objects for SetAggregate, so we do a bit of
-	// boxing/casting here.
+	// We need a slice of Getter objects for SetAggregate.
 	var machinePoolPointers []capiconditions.Getter
 	for _, machinePool := range machinePools.Items {
 		machinePoolObj := machinePool

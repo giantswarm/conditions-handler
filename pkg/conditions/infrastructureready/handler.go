@@ -42,7 +42,6 @@ func NewHandler(config HandlerConfig) (*Handler, error) {
 		UpdateStatusOnConditionChange: config.UpdateStatusOnConditionChange,
 		ConditionType:                 capi.InfrastructureReadyCondition,
 		EnsureCreatedFunc:             h.ensureCreated,
-		EnsureDeletedFunc:             nil,
 	}
 
 	internalHandler, err := internal.NewHandler(internalHandlerConfig)
@@ -54,7 +53,7 @@ func NewHandler(config HandlerConfig) (*Handler, error) {
 	return h, nil
 }
 
-func (h *Handler) EnsureCreated(ctx context.Context, object conditions.Object) error {
+func (h *Handler) EnsureCreated(ctx context.Context, object interface{}) error {
 	obj, err := key.ToObjectWithConditions(object)
 	if err != nil {
 		return microerror.Mask(err)
@@ -63,8 +62,8 @@ func (h *Handler) EnsureCreated(ctx context.Context, object conditions.Object) e
 	return h.internalHandler.EnsureCreated(ctx, obj)
 }
 
-func (h *Handler) EnsureDeleted(ctx context.Context, object conditions.Object) error {
-	return h.internalHandler.EnsureDeleted(ctx, object)
+func (h *Handler) EnsureDeleted(_ context.Context, _ interface{}) error {
+	return nil
 }
 
 func (h *Handler) ensureCreated(ctx context.Context, object conditions.Object) error {

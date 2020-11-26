@@ -60,7 +60,7 @@ func (h *Handler) EnsureCreated(ctx context.Context, object interface{}) error {
 	return h.internalHandler.EnsureCreated(ctx, &cluster)
 }
 
-func (h *Handler) EnsureDeleted(_ context.Context, _ conditions.Object) error {
+func (h *Handler) EnsureDeleted(_ context.Context, _ interface{}) error {
 	return nil
 }
 
