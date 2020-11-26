@@ -57,6 +57,12 @@ func (h *Handler) EnsureCreated(ctx context.Context, object conditions.Object) (
 		return
 	}
 
+	if conditions.IsUnsupported(object, h.conditionType) {
+		return microerror.Maskf(
+			conditions.UnsupportedConditionStatusError,
+			conditions.UnsupportedConditionStatusErrorMessage(object, h.conditionType))
+	}
+
 	initialConditionValue := capiconditions.Get(object, h.conditionType)
 	h.logDebug(ctx, "ensuring condition %s", sprintCondition(h.conditionType, initialConditionValue))
 	var conditionChanged bool

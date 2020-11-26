@@ -6,6 +6,10 @@ import (
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
 )
 
+const (
+	releaseVersion = "release.giantswarm.io/version"
+)
+
 func ToCluster(v interface{}) (capi.Cluster, error) {
 	if v == nil {
 		return capi.Cluster{}, microerror.Maskf(wrongTypeError, "expected '%T', got '%T'", &capi.Cluster{}, v)
@@ -31,4 +35,8 @@ func ToObjectWithConditions(v interface{}) (conditions.Object, error) {
 	}
 
 	return object, nil
+}
+
+func ReleaseVersion(object conditions.Object) string {
+	return object.GetLabels()[releaseVersion]
 }
