@@ -6,12 +6,12 @@ import (
 	capiconditions "sigs.k8s.io/cluster-api/util/conditions"
 )
 
-// UpdateNodePoolsReady sets NodePoolsReady condition on specified cluster
+// update sets NodePoolsReady condition on specified cluster
 // by aggregating Ready conditions from specified node pool objects.
 //
 // If node pool objects are found, cluster NodePoolsReady is set to with status
 // False and reason NodePoolsNotFoundReason.
-func UpdateNodePoolsReady(cluster *capi.Cluster, nodePools []capiconditions.Getter) {
+func update(cluster *capi.Cluster, nodePools []capiconditions.Getter) {
 	if len(nodePools) == 0 {
 		capiconditions.MarkFalse(
 			cluster,
