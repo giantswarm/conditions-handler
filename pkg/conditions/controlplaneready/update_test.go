@@ -111,7 +111,7 @@ func TestUpdateControlPlaneReady(t *testing.T) {
 			t.Log(tc.name)
 
 			// act
-			updateControlPlaneReadyCondition(tc.cluster, tc.controlPlaneObject)
+			update(tc.cluster, tc.controlPlaneObject)
 
 			// assert
 			controlPlaneReady, ok := conditions.GetControlPlaneReady(tc.cluster)

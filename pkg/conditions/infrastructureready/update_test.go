@@ -20,8 +20,75 @@ func TestUpdateInfrastructureReady(t *testing.T) {
 		expectedCondition    capi.Condition
 	}{
 		{
-			name:                 "case 0: For nil infrastructure object, it sets InfrastructureReady(Status=False, Severity=Warning, Reason=InfrastructureObjectNotFound)",
-			cluster:              &capi.Cluster{},
+			name: "case 0: For 5min old cluster without infrastructure ref, it sets InfrastructureReady(Status=False, Severity=Info, Reason=InfrastructureObjectNotSet)",
+			cluster: &capi.Cluster{
+				ObjectMeta: metav1.ObjectMeta{
+					CreationTimestamp: metav1.NewTime(time.Now().Add(-conditions.WaitingForInfrastructureWarningThresholdTime / 2)),
+				},
+			},
+			infrastructureObject: nil,
+			expectedCondition: capi.Condition{
+				Type:     capi.InfrastructureReadyCondition,
+				Status:   corev1.ConditionFalse,
+				Severity: capi.ConditionSeverityInfo,
+				Reason:   conditions.InfrastructureReferenceNotSetReason,
+			},
+		},
+		{
+			name: "case 1: For 20min old cluster without infrastructure ref, it sets InfrastructureReady(Status=False, Severity=Warning, Reason=InfrastructureObjectNotSet)",
+			cluster: &capi.Cluster{
+				ObjectMeta: metav1.ObjectMeta{
+					CreationTimestamp: metav1.NewTime(time.Now().Add(-2 * conditions.WaitingForInfrastructureWarningThresholdTime)),
+				},
+			},
+			infrastructureObject: nil,
+			expectedCondition: capi.Condition{
+				Type:     capi.InfrastructureReadyCondition,
+				Status:   corev1.ConditionFalse,
+				Severity: capi.ConditionSeverityWarning,
+				Reason:   conditions.InfrastructureReferenceNotSetReason,
+			},
+		},
+		{
+			name: "case 2: For 5min old cluster and nil infrastructure object, it sets InfrastructureReady(Status=False, Severity=Info, Reason=InfrastructureObjectNotFound)",
+			cluster: &capi.Cluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace:         "default",
+					Name:              "hello",
+					CreationTimestamp: metav1.NewTime(time.Now().Add(-conditions.WaitingForInfrastructureWarningThresholdTime / 2)),
+				},
+				Spec: capi.ClusterSpec{
+					InfrastructureRef: &corev1.ObjectReference{
+						Kind:      "MockProviderCluster",
+						Namespace: "default",
+						Name:      "hello",
+					},
+				},
+			},
+			infrastructureObject: nil,
+			expectedCondition: capi.Condition{
+				Type:     capi.InfrastructureReadyCondition,
+				Status:   corev1.ConditionFalse,
+				Severity: capi.ConditionSeverityInfo,
+				Reason:   conditions.InfrastructureObjectNotFoundReason,
+			},
+		},
+		{
+			name: "case 3: For 20min old cluster and nil infrastructure object, it sets InfrastructureReady(Status=False, Severity=Warning, Reason=InfrastructureObjectNotFound)",
+			cluster: &capi.Cluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace:         "default",
+					Name:              "hello",
+					CreationTimestamp: metav1.NewTime(time.Now().Add(-2 * conditions.WaitingForInfrastructureWarningThresholdTime)),
+				},
+				Spec: capi.ClusterSpec{
+					InfrastructureRef: &corev1.ObjectReference{
+						Kind:      "MockProviderCluster",
+						Namespace: "default",
+						Name:      "hello",
+					},
+				},
+			},
 			infrastructureObject: nil,
 			expectedCondition: capi.Condition{
 				Type:     capi.InfrastructureReadyCondition,
@@ -31,10 +98,19 @@ func TestUpdateInfrastructureReady(t *testing.T) {
 			},
 		},
 		{
-			name: "case 1: For 5min old Cluster and infrastructure object w/o Ready, it sets InfrastructureReady(Status=False, Severity=Info, Reason=WaitingForInfrastructureFallback)",
+			name: "case 4: For 5min old Cluster and infrastructure object w/o Ready, it sets InfrastructureReady(Status=False, Severity=Info, Reason=WaitingForInfrastructureFallback)",
 			cluster: &capi.Cluster{
 				ObjectMeta: metav1.ObjectMeta{
-					CreationTimestamp: metav1.NewTime(time.Now().Add(-WaitingForInfrastructureWarningThresholdTime / 2)),
+					Namespace:         "default",
+					Name:              "hello",
+					CreationTimestamp: metav1.NewTime(time.Now().Add(-conditions.WaitingForInfrastructureWarningThresholdTime / 2)),
+				},
+				Spec: capi.ClusterSpec{
+					InfrastructureRef: &corev1.ObjectReference{
+						Kind:      "MockProviderCluster",
+						Namespace: "default",
+						Name:      "hello",
+					},
 				},
 			},
 			infrastructureObject: &internal.MockProviderCluster{
@@ -50,10 +126,19 @@ func TestUpdateInfrastructureReady(t *testing.T) {
 			},
 		},
 		{
-			name: "case 2: For 20min old Cluster and infrastructure object w/o Ready, it sets InfrastructureReady status to False, Severity=Warning, Reason=WaitingForInfrastructureFallback",
+			name: "case 5: For 20min old Cluster and infrastructure object w/o Ready, it sets InfrastructureReady status to False, Severity=Warning, Reason=WaitingForInfrastructureFallback",
 			cluster: &capi.Cluster{
 				ObjectMeta: metav1.ObjectMeta{
-					CreationTimestamp: metav1.NewTime(time.Now().Add(-2 * WaitingForInfrastructureWarningThresholdTime)),
+					Namespace:         "default",
+					Name:              "hello",
+					CreationTimestamp: metav1.NewTime(time.Now().Add(-2 * conditions.WaitingForInfrastructureWarningThresholdTime)),
+				},
+				Spec: capi.ClusterSpec{
+					InfrastructureRef: &corev1.ObjectReference{
+						Kind:      "MockProviderCluster",
+						Namespace: "default",
+						Name:      "hello",
+					},
 				},
 			},
 			infrastructureObject: &internal.MockProviderCluster{
@@ -69,8 +154,16 @@ func TestUpdateInfrastructureReady(t *testing.T) {
 			},
 		},
 		{
-			name:    "case 3: For infrastructure object w/ Ready(Status=False), it sets InfrastructureReady(Status=False)",
-			cluster: &capi.Cluster{},
+			name: "case 6: For infrastructure object w/ Ready(Status=False), it sets InfrastructureReady(Status=False)",
+			cluster: &capi.Cluster{
+				Spec: capi.ClusterSpec{
+					InfrastructureRef: &corev1.ObjectReference{
+						Kind:      "MockProviderCluster",
+						Namespace: "default",
+						Name:      "hello",
+					},
+				},
+			},
 			infrastructureObject: &internal.MockProviderCluster{
 				Status: internal.MockProviderClusterStatus{
 					Conditions: capi.Conditions{
@@ -87,8 +180,16 @@ func TestUpdateInfrastructureReady(t *testing.T) {
 			},
 		},
 		{
-			name:    "case 4: For infrastructure object w/ Ready(Status=True), it sets InfrastructureReady(Status=True)",
-			cluster: &capi.Cluster{},
+			name: "case 7: For infrastructure object w/ Ready(Status=True), it sets InfrastructureReady(Status=True)",
+			cluster: &capi.Cluster{
+				Spec: capi.ClusterSpec{
+					InfrastructureRef: &corev1.ObjectReference{
+						Kind:      "MockProviderCluster",
+						Namespace: "default",
+						Name:      "hello",
+					},
+				},
+			},
 			infrastructureObject: &internal.MockProviderCluster{
 				Status: internal.MockProviderClusterStatus{
 					Conditions: capi.Conditions{
@@ -111,7 +212,7 @@ func TestUpdateInfrastructureReady(t *testing.T) {
 			t.Log(tc.name)
 
 			// act
-			updateInfrastructureReadyCondition(tc.cluster, tc.infrastructureObject)
+			update(&clusterWrapper{tc.cluster}, tc.infrastructureObject)
 
 			// assert
 			infrastructureReady, ok := conditions.GetInfrastructureReady(tc.cluster)

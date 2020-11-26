@@ -40,7 +40,6 @@ func NewHandler(config HandlerConfig) (*Handler, error) {
 		UpdateStatusOnConditionChange: config.UpdateStatusOnConditionChange,
 		ConditionType:                 conditions.NodePoolsReady,
 		EnsureCreatedFunc:             h.ensureCreated,
-		EnsureDeletedFunc:             nil,
 	}
 
 	internalHandler, err := internal.NewHandler(internalHandlerConfig)
@@ -61,8 +60,8 @@ func (h *Handler) EnsureCreated(ctx context.Context, object interface{}) error {
 	return h.internalHandler.EnsureCreated(ctx, &cluster)
 }
 
-func (h *Handler) EnsureDeleted(ctx context.Context, object conditions.Object) error {
-	return h.internalHandler.EnsureDeleted(ctx, object)
+func (h *Handler) EnsureDeleted(_ context.Context, _ interface{}) error {
+	return nil
 }
 
 func (h *Handler) ensureCreated(ctx context.Context, object conditions.Object) error {

@@ -6,7 +6,7 @@ import (
 	"github.com/giantswarm/conditions/pkg/conditions"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
-	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
 	capiexternal "sigs.k8s.io/cluster-api/controllers/external"
 	capiexp "sigs.k8s.io/cluster-api/exp/api/v1alpha3"
@@ -14,6 +14,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/giantswarm/conditions-handler/pkg/internal"
+	"github.com/giantswarm/conditions-handler/pkg/key"
 )
 
 type HandlerConfig struct {
@@ -54,7 +55,12 @@ func NewHandler(config HandlerConfig) (*Handler, error) {
 }
 
 func (h *Handler) EnsureCreated(ctx context.Context, object conditions.Object) error {
-	return h.internalHandler.EnsureCreated(ctx, object)
+	obj, err := key.ToObjectWithConditions(object)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	return h.internalHandler.EnsureCreated(ctx, obj)
 }
 
 func (h *Handler) EnsureDeleted(ctx context.Context, object conditions.Object) error {
@@ -62,51 +68,55 @@ func (h *Handler) EnsureDeleted(ctx context.Context, object conditions.Object) e
 }
 
 func (h *Handler) ensureCreated(ctx context.Context, object conditions.Object) error {
-	infrastructureRef, err := getInfrastructureRef(object)
+	obj, err := toObjectWithInfrastructure(object)
 	if err != nil {
 		return microerror.Mask(err)
 	}
 
-	infrastructureObject, err := capiexternal.Get(ctx, h.ctrlClient, infrastructureRef, object.GetNamespace())
-	if err != nil {
-		return microerror.Mask(err)
-	}
-	infrastructureObjectGetter := capiconditions.UnstructuredGetter(infrastructureObject)
-
-	updateInfrastructureReadyCondition(object, infrastructureObjectGetter)
-	err = updateObjectStatusInfrastructureReady(object)
+	infrastructureObject, err := h.getInfrastructureObject(ctx, obj)
 	if err != nil {
 		return microerror.Mask(err)
 	}
 
+	update(obj, infrastructureObject)
 	return nil
 }
 
-func getInfrastructureRef(object conditions.Object) (*corev1.ObjectReference, error) {
+func (h *Handler) getInfrastructureObject(ctx context.Context, object objectWithInfrastructureRef) (capiconditions.Getter, error) {
+	infrastructureRef := object.GetInfrastructureRef()
+	if infrastructureRef == nil {
+		// Infrastructure object is not set
+		return nil, nil
+	}
+
+	infrastructureObject, err := capiexternal.Get(ctx, h.ctrlClient, object.GetInfrastructureRef(), object.GetNamespace())
+	if apierrors.IsNotFound(err) {
+		// Infrastructure object is not found, here we don't care why
+		return nil, nil
+	} else if err != nil {
+		return nil, microerror.Mask(err)
+	}
+
+	// Wrap unstructured object into a capiconditions.Getter
+	infrastructureObjectGetter := capiconditions.UnstructuredGetter(infrastructureObject)
+
+	return infrastructureObjectGetter, nil
+}
+
+func toObjectWithInfrastructure(object conditions.Object) (objectWithInfrastructureRef, error) {
+	if object == nil {
+		return nil, microerror.Maskf(wrongTypeError, "expected non-nil conditions.Object, got nil '%T'", object)
+	}
+
 	clusterPointer, ok := object.(*capi.Cluster)
 	if ok {
-		return clusterPointer.Spec.InfrastructureRef, nil
+		return &clusterWrapper{clusterPointer}, nil
 	}
 
 	machinePoolPointer, ok := object.(*capiexp.MachinePool)
 	if ok {
-		return &machinePoolPointer.Spec.Template.Spec.InfrastructureRef, nil
+		return &machinePoolWrapper{machinePoolPointer}, nil
 	}
 
 	return nil, microerror.Maskf(wrongTypeError, "expected Cluster or MachinePool, got %T", object)
-}
-
-func updateObjectStatusInfrastructureReady(object conditions.Object) error {
-	clusterPointer, ok := object.(*capi.Cluster)
-	if ok {
-		clusterPointer.Status.InfrastructureReady = conditions.IsInfrastructureReadyTrue(object)
-		return nil
-	}
-
-	machinePoolPointer, ok := object.(*capiexp.MachinePool)
-	if ok {
-		machinePoolPointer.Status.InfrastructureReady = conditions.IsInfrastructureReadyTrue(object)
-	}
-
-	return microerror.Maskf(wrongTypeError, "expected Cluster or MachinePool, got %T", object)
 }

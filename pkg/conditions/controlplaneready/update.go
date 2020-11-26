@@ -9,7 +9,7 @@ import (
 	capiconditions "sigs.k8s.io/cluster-api/util/conditions"
 )
 
-// updateControlPlaneReadyCondition sets ControlPlaneReady condition on specified
+// update sets ControlPlaneReady condition on specified
 // cluster by mirroring Ready condition from specified control plane object.
 //
 // If specified control plane object is nil, object ControlPlaneReady will
@@ -18,7 +18,7 @@ import (
 // If specified control plane object's Ready condition is not set, object
 // ControlPlaneReady will be set with condition False and reason
 // WaitingForControlPlane.
-func updateControlPlaneReadyCondition(cluster *capi.Cluster, controlPlaneObject capiconditions.Getter) {
+func update(cluster *capi.Cluster, controlPlaneObject capiconditions.Getter) {
 	if controlPlaneObject == nil {
 		warningMessage :=
 			"Control plane object of type %T is not found for specified %T object %s/%s"
@@ -61,4 +61,10 @@ func updateControlPlaneReadyCondition(cluster *capi.Cluster, controlPlaneObject 
 			controlPlaneObject, fallbackWarningMessage))
 
 	capiconditions.SetMirror(cluster, capi.ControlPlaneReadyCondition, controlPlaneObject, fallbackToFalse)
+
+	// Update deprecated status fields
+	cluster.Status.ControlPlaneReady = conditions.IsInfrastructureReadyTrue(cluster)
+	if !cluster.Status.ControlPlaneInitialized {
+		cluster.Status.ControlPlaneInitialized = cluster.Status.ControlPlaneReady
+	}
 }

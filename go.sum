@@ -127,6 +127,10 @@ github.com/giantswarm/conditions v0.0.0-20201123160011-6ae6ff7e118a h1:gSG1Eg7T8
 github.com/giantswarm/conditions v0.0.0-20201123160011-6ae6ff7e118a/go.mod h1:hd44FEG2CaT0gSC9gTXWqM+yhW0nFlBBxTxHqgRll38=
 github.com/giantswarm/conditions v0.0.0-20201125143305-c28ae85a4d78 h1:bvqwnnEFU2w2rySb/n3ZSx8ePL6fqNplWf1bbx7OWtU=
 github.com/giantswarm/conditions v0.0.0-20201125143305-c28ae85a4d78/go.mod h1:hd44FEG2CaT0gSC9gTXWqM+yhW0nFlBBxTxHqgRll38=
+github.com/giantswarm/conditions v0.0.0-20201126131506-24fe1454a422 h1:JPELN8OML3MAZXGrqN4LPbDd2G95WVRqL1p1h0J7WOY=
+github.com/giantswarm/conditions v0.0.0-20201126131506-24fe1454a422/go.mod h1:hd44FEG2CaT0gSC9gTXWqM+yhW0nFlBBxTxHqgRll38=
+github.com/giantswarm/conditions v0.0.0-20201126131939-929806b6b319 h1:CVJ5zpx/pv/IjcvbtI0HTzldWY44vv27cejLjQ4MCiY=
+github.com/giantswarm/conditions v0.0.0-20201126131939-929806b6b319/go.mod h1:hd44FEG2CaT0gSC9gTXWqM+yhW0nFlBBxTxHqgRll38=
 github.com/giantswarm/microerror v0.2.1 h1:4y88WstqZ4OSSq6T/TvTJaefRe/JbrbuwoWQNVxOOyU=
 github.com/giantswarm/microerror v0.2.1/go.mod h1:1YtJq/m7Vlq1Y6NP7B+SODOKCGlG7e5wctV2OoE9n34=
 github.com/giantswarm/micrologger v0.3.4 h1:NKD6pz1++Hkq/ulOT9iu7hwTnG3ZfjnPUtuK/tbeCc8=

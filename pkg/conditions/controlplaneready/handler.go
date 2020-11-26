@@ -12,6 +12,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/giantswarm/conditions-handler/pkg/internal"
+	"github.com/giantswarm/conditions-handler/pkg/key"
 )
 
 type HandlerConfig struct {
@@ -39,7 +40,6 @@ func NewHandler(config HandlerConfig) (*Handler, error) {
 		UpdateStatusOnConditionChange: config.UpdateStatusOnConditionChange,
 		ConditionType:                 capi.ControlPlaneReadyCondition,
 		EnsureCreatedFunc:             h.ensureCreated,
-		EnsureDeletedFunc:             nil,
 	}
 
 	internalHandler, err := internal.NewHandler(internalHandlerConfig)
@@ -51,33 +51,39 @@ func NewHandler(config HandlerConfig) (*Handler, error) {
 	return h, nil
 }
 
-func (h *Handler) EnsureCreated(ctx context.Context, object conditions.Object) error {
-	return h.internalHandler.EnsureCreated(ctx, object)
-}
-
-func (h *Handler) EnsureDeleted(ctx context.Context, object conditions.Object) error {
-	return h.internalHandler.EnsureDeleted(ctx, object)
-}
-
-func (h *Handler) ensureCreated(ctx context.Context, object conditions.Object) error {
-	cluster, ok := object.(*capi.Cluster)
-	if !ok {
-		microerror.Maskf(wrongTypeError, "expected Cluster, got %T", object)
-	}
-
-	controlPlaneObject, err := capiexternal.Get(ctx, h.ctrlClient, cluster.Spec.ControlPlaneRef, object.GetNamespace())
+func (h *Handler) EnsureCreated(ctx context.Context, object interface{}) error {
+	cluster, err := key.ToCluster(object)
 	if err != nil {
 		return microerror.Mask(err)
 	}
-	controlPlaneObjectGetter := capiconditions.UnstructuredGetter(controlPlaneObject)
 
-	updateControlPlaneReadyCondition(cluster, controlPlaneObjectGetter)
+	return h.internalHandler.EnsureCreated(ctx, &cluster)
+}
 
-	// Update deprecated status fields
-	cluster.Status.ControlPlaneReady = conditions.IsInfrastructureReadyTrue(cluster)
-	if !cluster.Status.ControlPlaneInitialized {
-		cluster.Status.ControlPlaneInitialized = cluster.Status.ControlPlaneReady
+func (h *Handler) EnsureDeleted(_ context.Context, _ conditions.Object) error {
+	return nil
+}
+
+func (h *Handler) ensureCreated(ctx context.Context, object conditions.Object) error {
+	cluster, err := key.ToCluster(object)
+	if err != nil {
+		return microerror.Mask(err)
 	}
 
+	controlPlane, err := h.getControlPlaneObject(ctx, &cluster)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	update(&cluster, controlPlane)
 	return nil
+}
+
+func (h *Handler) getControlPlaneObject(ctx context.Context, cluster *capi.Cluster) (capiconditions.Getter, error) {
+	controlPlaneObject, err := capiexternal.Get(ctx, h.ctrlClient, cluster.Spec.ControlPlaneRef, cluster.Namespace)
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
+	controlPlaneObjectGetter := capiconditions.UnstructuredGetter(controlPlaneObject)
+	return controlPlaneObjectGetter, nil
 }

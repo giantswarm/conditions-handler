@@ -1,6 +1,7 @@
 package key
 
 import (
+	"github.com/giantswarm/conditions/pkg/conditions"
 	"github.com/giantswarm/microerror"
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
 )
@@ -17,4 +18,17 @@ func ToCluster(v interface{}) (capi.Cluster, error) {
 	customObject := *customObjectPointer
 
 	return customObject, nil
+}
+
+func ToObjectWithConditions(v interface{}) (conditions.Object, error) {
+	if v == nil {
+		return nil, microerror.Maskf(wrongTypeError, "expected non-nil conditions.Object, got nil '%T'", v)
+	}
+
+	object, ok := v.(conditions.Object)
+	if !ok {
+		return nil, microerror.Maskf(wrongTypeError, "expected 'conditions.Object', got '%T'", v)
+	}
+
+	return object, nil
 }
