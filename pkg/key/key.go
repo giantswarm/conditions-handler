@@ -1,9 +1,13 @@
 package key
 
 import (
+	"strings"
+
 	"github.com/giantswarm/conditions/pkg/conditions"
 	"github.com/giantswarm/microerror"
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
+
+	"github.com/giantswarm/conditions-handler/pkg/internal"
 )
 
 const (
@@ -39,4 +43,16 @@ func ToObjectWithConditions(v interface{}) (conditions.Object, error) {
 
 func ReleaseVersion(object conditions.Object) string {
 	return object.GetLabels()[releaseVersion]
+}
+
+// isFirstNodePoolUpgradeInProgress checks if the cluster is being upgraded
+// from an old/legacy release to the node pools release.
+func IsFirstNodePoolUpgradeInProgress(object conditions.Object) bool {
+	cluster, err := ToCluster(object)
+	if err != nil {
+		return false
+	}
+
+	upgradingToNodePools, isUpgradingToNodePoolsSet := cluster.GetAnnotations()[internal.UpgradingToNodePools]
+	return isUpgradingToNodePoolsSet && strings.ToLower(upgradingToNodePools) == "true"
 }

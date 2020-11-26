@@ -8,16 +8,8 @@ import (
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
 	capiconditions "sigs.k8s.io/cluster-api/util/conditions"
 
+	"github.com/giantswarm/conditions-handler/pkg/internal"
 	"github.com/giantswarm/conditions-handler/pkg/key"
-)
-
-const (
-	// lastDeployedReleaseVersion is the version annotation put into Cluster CR to
-	// define which Giant Swarm release version was last successfully deployed
-	// during cluster creation or upgrade. Versions are defined as semver version
-	// without the "v" prefix, e.g. 14.1.0, which means that cluster was created
-	// with or upgraded to Giant Swarm release v14.1.0.
-	lastDeployedReleaseVersion = "release.giantswarm.io/last-deployed-version"
 )
 
 // MarkUpgradingTrue sets Upgrading condition with status True.
@@ -68,7 +60,7 @@ func update(object conditions.Object) {
 
 	// Case 2: Cluster-only check, first cluster upgrade to node pools release,
 	// a bit of an edgecase, albeit an important one :)
-	if isFirstNodePoolUpgradeInProgress(object) {
+	if key.IsFirstNodePoolUpgradeInProgress(object) {
 		if !conditions.IsUpgradingTrue(object) {
 			MarkUpgradingTrue(object)
 		}
@@ -76,7 +68,7 @@ func update(object conditions.Object) {
 	}
 
 	// Let's check what was the last release version that we successfully deployed.
-	lastDeployedReleaseVersion, isLastDeployedReleaseVersionSet := object.GetAnnotations()[lastDeployedReleaseVersion]
+	lastDeployedReleaseVersion, isLastDeployedReleaseVersionSet := object.GetAnnotations()[internal.LastDeployedReleaseVersion]
 	if !isLastDeployedReleaseVersionSet {
 		// Case 3: Last deployed release version annotation is not set at all,
 		// which means that cluster or node pool creation has not completed, so
@@ -96,21 +88,21 @@ func update(object conditions.Object) {
 	currentUpgrading, isSet := conditions.GetUpgrading(object)
 
 	if !isSet || conditions.IsUnknown(&currentUpgrading) {
-		// Cluster or node pool is still being created, or it's restored from
-		// backup, this case should be very rare and almost never happen.
+		// Case 4: Cluster or node pool is still being created, or it's restored
+		// from backup, this case should be very rare and almost never happen.
 		if desiredReleaseVersionIsDeployed {
 			MarkUpgradingFalseWithUpgradeNotStarted(object)
 		} else {
 			MarkUpgradingTrue(object)
 		}
 	} else if conditions.IsTrue(&currentUpgrading) && desiredReleaseVersionIsDeployed {
-		// Cluster or node pool was being upgraded.
+		// Case 5: Cluster or node pool was being upgraded.
 		// Also, last deployed release version for this object is equal to the
 		// desired release version, so we can conclude that the upgrade has been
 		// completed.
 		MarkUpgradingFalseWithUpgradeCompleted(object)
 	} else if conditions.IsFalse(&currentUpgrading) && !desiredReleaseVersionIsDeployed {
-		// Cluster or node pool was not being upgraded.
+		// Case 6: Cluster or node pool was not being upgraded.
 		// Also, desired release for this cluster is different than the release
 		// to which it was previously upgraded or with which was created, so we
 		// can conclude that the cluster is in the Upgrading state.
