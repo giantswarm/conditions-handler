@@ -82,7 +82,8 @@ func markCreatingFalseIfCreationCompleted(object conditions.Object) {
 	desiredReleaseVersion := key.ReleaseVersion(object)
 
 	if lastDeployedReleaseVersion == desiredReleaseVersion {
-		// Cluster or node pool creation has been completed! :)
+		// Desired version has been reached, cluster or node pool creation has
+		// been completed! :)
 		MarkCreatingFalseWithCreationCompleted(object)
 	}
 }
