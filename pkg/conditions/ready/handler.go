@@ -17,17 +17,20 @@ type HandlerConfig struct {
 	CtrlClient ctrl.Client
 	Logger     micrologger.Logger
 
-	UpdateStatusOnConditionChange bool
 	ConditionsToSummarize         []capi.ConditionType
 	IgnoreOptions                 []conditions.CheckOption
+	Name                          string
+	UpdateStatusOnConditionChange bool
 }
 
 type Handler struct {
-	ctrlClient            ctrl.Client
-	internalHandler       *internal.Handler
-	logger                micrologger.Logger
+	ctrlClient      ctrl.Client
+	internalHandler *internal.Handler
+	logger          micrologger.Logger
+
 	conditionsToSummarize []capi.ConditionType
 	ignoreOptions         []conditions.CheckOption
+	name                  string
 }
 
 func NewHandler(config HandlerConfig) (*Handler, error) {
@@ -36,6 +39,7 @@ func NewHandler(config HandlerConfig) (*Handler, error) {
 		logger:                config.Logger,
 		conditionsToSummarize: config.ConditionsToSummarize,
 		ignoreOptions:         config.IgnoreOptions,
+		name:                  config.Name,
 	}
 
 	internalHandlerConfig := internal.HandlerConfig{
@@ -66,6 +70,10 @@ func (h *Handler) EnsureCreated(ctx context.Context, object interface{}) error {
 
 func (h *Handler) EnsureDeleted(_ context.Context, _ interface{}) error {
 	return nil
+}
+
+func (h *Handler) Name() string {
+	return h.name
 }
 
 func (h *Handler) ensureCreated(_ context.Context, object conditions.Object) error {

@@ -21,6 +21,7 @@ type HandlerConfig struct {
 	CtrlClient ctrl.Client
 	Logger     micrologger.Logger
 
+	Name                          string
 	UpdateStatusOnConditionChange bool
 }
 
@@ -28,12 +29,14 @@ type Handler struct {
 	ctrlClient      ctrl.Client
 	internalHandler *internal.Handler
 	logger          micrologger.Logger
+	name            string
 }
 
 func NewHandler(config HandlerConfig) (*Handler, error) {
 	h := &Handler{
 		ctrlClient: config.CtrlClient,
 		logger:     config.Logger,
+		name:       config.Name,
 	}
 
 	internalHandlerConfig := internal.HandlerConfig{
@@ -64,6 +67,10 @@ func (h *Handler) EnsureCreated(ctx context.Context, object interface{}) error {
 
 func (h *Handler) EnsureDeleted(_ context.Context, _ interface{}) error {
 	return nil
+}
+
+func (h *Handler) Name() string {
+	return h.name
 }
 
 func (h *Handler) ensureCreated(ctx context.Context, object conditions.Object) error {
