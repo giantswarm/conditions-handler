@@ -3,7 +3,6 @@ package composite
 import (
 	"context"
 
-	"github.com/giantswarm/conditions/pkg/conditions"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
@@ -50,7 +49,7 @@ func NewHandler(config HandlerConfig) (*Handler, error) {
 	return h, nil
 }
 
-func (h *Handler) EnsureCreated(ctx context.Context, object conditions.Object) error {
+func (h *Handler) EnsureCreated(ctx context.Context, object interface{}) error {
 	var err error
 	for _, handler := range h.handlers {
 		err = handler.EnsureCreated(ctx, object)
@@ -62,7 +61,7 @@ func (h *Handler) EnsureCreated(ctx context.Context, object conditions.Object) e
 	return nil
 }
 
-func (h *Handler) EnsureDeleted(ctx context.Context, object conditions.Object) error {
+func (h *Handler) EnsureDeleted(ctx context.Context, object interface{}) error {
 	var err error
 	for _, handler := range h.handlers {
 		err = handler.EnsureDeleted(ctx, object)
