@@ -1,4 +1,4 @@
-package ready
+package summary
 
 import (
 	"context"
@@ -17,10 +17,11 @@ type HandlerConfig struct {
 	CtrlClient ctrl.Client
 	Logger     micrologger.Logger
 
-	ConditionsToSummarize         []capi.ConditionType
-	IgnoreOptions                 []conditions.CheckOption
-	Name                          string
-	UpdateStatusOnConditionChange bool
+	SummaryConditionType  capi.ConditionType
+	ConditionsToSummarize []capi.ConditionType
+	IgnoreOptions         []conditions.CheckOption
+	Name                  string
+	UpdateStatus          bool
 }
 
 type Handler struct {
@@ -42,12 +43,19 @@ func NewHandler(config HandlerConfig) (*Handler, error) {
 		name:                  config.Name,
 	}
 
+	var summaryConditionType capi.ConditionType
+	if config.SummaryConditionType != "" {
+		summaryConditionType = config.SummaryConditionType
+	} else {
+		summaryConditionType = capi.ReadyCondition
+	}
+
 	internalHandlerConfig := internal.HandlerConfig{
-		CtrlClient:                    config.CtrlClient,
-		Logger:                        config.Logger,
-		UpdateStatusOnConditionChange: config.UpdateStatusOnConditionChange,
-		ConditionType:                 capi.ReadyCondition,
-		EnsureCreatedFunc:             h.ensureCreated,
+		CtrlClient:        config.CtrlClient,
+		Logger:            config.Logger,
+		UpdateStatus:      config.UpdateStatus,
+		ConditionType:     summaryConditionType,
+		EnsureCreatedFunc: h.ensureCreated,
 	}
 
 	internalHandler, err := internal.NewHandler(internalHandlerConfig)

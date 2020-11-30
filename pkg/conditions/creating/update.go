@@ -74,8 +74,8 @@ func initialize(object conditions.Object) {
 func markCreatingFalseIfCreationCompleted(object conditions.Object) {
 	lastDeployedReleaseVersion, isLastDeployedReleaseVersionSet := object.GetAnnotations()[internal.LastDeployedReleaseVersion]
 	if !isLastDeployedReleaseVersionSet {
-		// Cluster creation is not completed, since there is no last deployed
-		// release version set.
+		// Cluster or node pool creation is not completed, since there is no
+		// last deployed release version set.
 		return
 	}
 

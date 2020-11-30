@@ -16,20 +16,20 @@ type HandlerConfig struct {
 	CtrlClient ctrl.Client
 	Logger     micrologger.Logger
 
-	UpdateStatusOnConditionChange bool
-	ConditionType                 capi.ConditionType
-	EnsureCreatedFunc             func(ctx context.Context, object conditions.Object) error
-	EnsureDeletedFunc             func(ctx context.Context, object conditions.Object) error
+	UpdateStatus      bool
+	ConditionType     capi.ConditionType
+	EnsureCreatedFunc func(ctx context.Context, object conditions.Object) error
+	EnsureDeletedFunc func(ctx context.Context, object conditions.Object) error
 }
 
 type Handler struct {
 	ctrlClient ctrl.Client
 	logger     micrologger.Logger
 
-	conditionType                 capi.ConditionType
-	updateStatusOnConditionChange bool
-	ensureCreatedFunc             func(ctx context.Context, object conditions.Object) error
-	ensureDeletedFunc             func(ctx context.Context, object conditions.Object) error
+	conditionType     capi.ConditionType
+	updateStatus      bool
+	ensureCreatedFunc func(ctx context.Context, object conditions.Object) error
+	ensureDeletedFunc func(ctx context.Context, object conditions.Object) error
 }
 
 func NewHandler(config HandlerConfig) (*Handler, error) {
@@ -41,12 +41,12 @@ func NewHandler(config HandlerConfig) (*Handler, error) {
 	}
 
 	h := &Handler{
-		ctrlClient:                    config.CtrlClient,
-		logger:                        config.Logger,
-		conditionType:                 config.ConditionType,
-		updateStatusOnConditionChange: config.UpdateStatusOnConditionChange,
-		ensureCreatedFunc:             config.EnsureCreatedFunc,
-		ensureDeletedFunc:             config.EnsureDeletedFunc,
+		ctrlClient:        config.CtrlClient,
+		logger:            config.Logger,
+		conditionType:     config.ConditionType,
+		updateStatus:      config.UpdateStatus,
+		ensureCreatedFunc: config.EnsureCreatedFunc,
+		ensureDeletedFunc: config.EnsureDeletedFunc,
 	}
 
 	return h, nil
@@ -87,7 +87,7 @@ func (h *Handler) EnsureCreated(ctx context.Context, object conditions.Object) (
 	currentConditionValue := capiconditions.Get(object, h.conditionType)
 	conditionChanged = !conditions.AreEqual(initialConditionValue, currentConditionValue)
 
-	if h.updateStatusOnConditionChange && conditionChanged {
+	if h.updateStatus {
 		err = h.ctrlClient.Status().Update(ctx, object)
 		if err != nil {
 			return microerror.Mask(err)

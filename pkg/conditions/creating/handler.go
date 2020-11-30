@@ -16,8 +16,8 @@ type HandlerConfig struct {
 	CtrlClient ctrl.Client
 	Logger     micrologger.Logger
 
-	Name                          string
-	UpdateStatusOnConditionChange bool
+	Name         string
+	UpdateStatus bool
 }
 
 type Handler struct {
@@ -35,11 +35,11 @@ func NewHandler(config HandlerConfig) (*Handler, error) {
 	}
 
 	internalHandlerConfig := internal.HandlerConfig{
-		CtrlClient:                    config.CtrlClient,
-		Logger:                        config.Logger,
-		UpdateStatusOnConditionChange: config.UpdateStatusOnConditionChange,
-		ConditionType:                 conditions.Creating,
-		EnsureCreatedFunc:             h.ensureCreated,
+		CtrlClient:        config.CtrlClient,
+		Logger:            config.Logger,
+		UpdateStatus:      config.UpdateStatus,
+		ConditionType:     conditions.Creating,
+		EnsureCreatedFunc: h.ensureCreated,
 	}
 
 	internalHandler, err := internal.NewHandler(internalHandlerConfig)

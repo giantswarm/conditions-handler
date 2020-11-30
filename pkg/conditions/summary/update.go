@@ -1,4 +1,4 @@
-package ready
+package summary
 
 import (
 	"github.com/giantswarm/conditions/pkg/conditions"
