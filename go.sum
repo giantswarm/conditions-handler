@@ -124,8 +124,6 @@ github.com/ghodss/yaml v0.0.0-20150909031657-73d445a93680/go.mod h1:4dBDuWmgqj2H
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/giantswarm/cluster-api v0.3.10-gs h1:l2LpZlN97t7RRwKf4OBfNA2h1oVnZXWC68TFRfBMu5c=
 github.com/giantswarm/cluster-api v0.3.10-gs/go.mod h1:878STePVJcBNDYFY2eCsLuHXWs6qiH3INFItEwdfWaE=
-github.com/giantswarm/conditions v0.0.0-20201126153517-669bea568172 h1:Vq7V9AIUms37ljprdUV+/0haE7fahUdvQZYNO97CT2s=
-github.com/giantswarm/conditions v0.0.0-20201126153517-669bea568172/go.mod h1:Bp0zSox1MdFV20MTvjXOr8li+v11OLX/8kponaIGVrw=
 github.com/giantswarm/conditions v0.0.0-20201127113941-a1124cf43f0a h1:GVZhcyojgVZc4TfijH5e0xEx+f2ZZF4jNMaJxZimxoQ=
 github.com/giantswarm/conditions v0.0.0-20201127113941-a1124cf43f0a/go.mod h1:Bp0zSox1MdFV20MTvjXOr8li+v11OLX/8kponaIGVrw=
 github.com/giantswarm/microerror v0.2.1 h1:4y88WstqZ4OSSq6T/TvTJaefRe/JbrbuwoWQNVxOOyU=
