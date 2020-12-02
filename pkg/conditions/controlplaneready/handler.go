@@ -60,7 +60,7 @@ func (h *Handler) EnsureCreated(ctx context.Context, object interface{}) error {
 		return microerror.Mask(err)
 	}
 
-	return h.internalHandler.EnsureCreated(ctx, &cluster)
+	return h.internalHandler.EnsureCreated(ctx, cluster)
 }
 
 func (h *Handler) EnsureDeleted(_ context.Context, _ interface{}) error {
@@ -77,12 +77,12 @@ func (h *Handler) ensureCreated(ctx context.Context, object conditions.Object) e
 		return microerror.Mask(err)
 	}
 
-	controlPlane, err := h.getControlPlaneObject(ctx, &cluster)
+	controlPlane, err := h.getControlPlaneObject(ctx, cluster)
 	if err != nil {
 		return microerror.Mask(err)
 	}
 
-	update(&cluster, controlPlane)
+	update(cluster, controlPlane)
 	return nil
 }
 

@@ -14,18 +14,17 @@ const (
 	releaseVersion = "release.giantswarm.io/version"
 )
 
-func ToCluster(v interface{}) (capi.Cluster, error) {
+func ToCluster(v interface{}) (*capi.Cluster, error) {
 	if v == nil {
-		return capi.Cluster{}, microerror.Maskf(wrongTypeError, "expected '%T', got '%T'", &capi.Cluster{}, v)
+		return nil, microerror.Maskf(wrongTypeError, "expected '%T', got nil", &capi.Cluster{})
 	}
 
 	customObjectPointer, ok := v.(*capi.Cluster)
 	if !ok {
-		return capi.Cluster{}, microerror.Maskf(wrongTypeError, "expected '%T', got '%T'", &capi.Cluster{}, v)
+		return nil, microerror.Maskf(wrongTypeError, "expected '%T', got '%T'", &capi.Cluster{}, v)
 	}
-	customObject := *customObjectPointer
 
-	return customObject, nil
+	return customObjectPointer, nil
 }
 
 func ToObjectWithConditions(v interface{}) (conditions.Object, error) {

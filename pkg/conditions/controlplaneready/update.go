@@ -63,7 +63,7 @@ func update(cluster *capi.Cluster, controlPlaneObject capiconditions.Getter) {
 	capiconditions.SetMirror(cluster, capi.ControlPlaneReadyCondition, controlPlaneObject, fallbackToFalse)
 
 	// Update deprecated status fields
-	cluster.Status.ControlPlaneReady = conditions.IsInfrastructureReadyTrue(cluster)
+	cluster.Status.ControlPlaneReady = conditions.IsControlPlaneReadyTrue(cluster)
 	if !cluster.Status.ControlPlaneInitialized {
 		cluster.Status.ControlPlaneInitialized = cluster.Status.ControlPlaneReady
 	}
