@@ -87,6 +87,10 @@ func (h *Handler) ensureCreated(ctx context.Context, object conditions.Object) e
 }
 
 func (h *Handler) getControlPlaneObject(ctx context.Context, cluster *capi.Cluster) (capiconditions.Getter, error) {
+	if cluster.Spec.ControlPlaneRef == nil {
+		return nil, nil
+	}
+
 	controlPlaneObject, err := capiexternal.Get(ctx, h.ctrlClient, cluster.Spec.ControlPlaneRef, cluster.Namespace)
 	if err != nil {
 		return nil, microerror.Mask(err)
