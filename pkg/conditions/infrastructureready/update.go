@@ -9,6 +9,10 @@ import (
 	capiconditions "sigs.k8s.io/cluster-api/util/conditions"
 )
 
+const (
+	deprecatedProviderInfrastructureReadyConditionType capi.ConditionType = "ProviderInfrastructureReady"
+)
+
 // update sets InfrastructureReady condition on specified object by mirroring
 // Ready condition from specified infrastructure object.
 //
@@ -19,6 +23,12 @@ import (
 // InfrastructureReady will be set with condition False and reason
 // WaitingForInfrastructure.
 func update(object objectWithInfrastructureRef, infrastructureObject capiconditions.Getter) {
+	// We need to remove already deprecated ProviderInfrastructureReady condition
+	// from clusters that are already upgraded to node pools release, as we are
+	// now using InfrastructureReady that is defined in the upstream Cluster API
+	// project.
+	removeDeprecatedProviderInfrastructureReadyCondition(object)
+
 	objectAge := time.Since(object.GetCreationTimestamp().Time)
 	var severity capi.ConditionSeverity
 	warningMessage := ""
@@ -83,4 +93,22 @@ func update(object objectWithInfrastructureRef, infrastructureObject capiconditi
 	// Update deprecated status fields
 	infrastructureReady := conditions.IsInfrastructureReadyTrue(object)
 	object.SetStatusInfrastructureReady(infrastructureReady)
+}
+
+func removeDeprecatedProviderInfrastructureReadyCondition(object objectWithInfrastructureRef) {
+	deprecatedProviderInfrastructureReadyCondition := capiconditions.Get(object, deprecatedProviderInfrastructureReadyConditionType)
+	if deprecatedProviderInfrastructureReadyCondition == nil {
+		return
+	}
+
+	allConditions := object.GetConditions()
+	var filteredConditions capi.Conditions
+
+	for _, c := range allConditions {
+		if c.Type != deprecatedProviderInfrastructureReadyConditionType {
+			filteredConditions = append(filteredConditions, c)
+		}
+	}
+
+	object.SetConditions(filteredConditions)
 }

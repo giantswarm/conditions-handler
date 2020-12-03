@@ -17,7 +17,7 @@ func update(cluster *capi.Cluster, nodePools []capiconditions.Getter) {
 			cluster,
 			conditions.NodePoolsReady,
 			conditions.NodePoolsNotFoundReason,
-			capi.ConditionSeverityWarning,
+			capi.ConditionSeverityInfo,
 			"Node pools are not found for Cluster %s/%s",
 			cluster.Namespace, cluster.Name)
 		return

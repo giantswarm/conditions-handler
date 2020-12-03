@@ -26,7 +26,7 @@ func MarkCreatingFalseWithCreationCompleted(object conditions.Object) {
 		conditions.Creating,
 		conditions.CreationCompletedReason,
 		capi.ConditionSeverityInfo,
-		"Cluster creation has been completed in %s",
+		"Creation has been completed in %s",
 		creationDuration)
 }
 

@@ -21,7 +21,7 @@ import (
 func update(cluster *capi.Cluster, controlPlaneObject capiconditions.Getter) {
 	if controlPlaneObject == nil {
 		warningMessage :=
-			"Control plane object of type %T is not found for specified %T object %s/%s"
+			"Control plane object is not found for specified %T object %s/%s"
 
 		capiconditions.MarkFalse(
 			cluster,
@@ -29,7 +29,7 @@ func update(cluster *capi.Cluster, controlPlaneObject capiconditions.Getter) {
 			conditions.ControlPlaneObjectNotFoundReason,
 			capi.ConditionSeverityWarning,
 			warningMessage,
-			controlPlaneObject, cluster, cluster.GetNamespace(), cluster.GetName())
+			*cluster, cluster.GetNamespace(), cluster.GetName())
 
 		return
 	}
