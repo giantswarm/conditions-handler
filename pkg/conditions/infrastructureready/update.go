@@ -31,7 +31,7 @@ func update(object objectWithInfrastructureRef, infrastructureObject capiconditi
 
 	objectAge := time.Since(object.GetCreationTimestamp().Time)
 	var severity capi.ConditionSeverity
-	warningMessage := ""
+	ageWarningMessage := ""
 	if objectAge > conditions.WaitingForInfrastructureWarningThresholdTime {
 		// Infrastructure reference should be set and provider-specific
 		// infrastructure object should then be reconciled soon after it has
@@ -40,7 +40,7 @@ func update(object objectWithInfrastructureRef, infrastructureObject capiconditi
 		// might be wrong, so we set object's InfrastructureReady condition with
 		// severity Warning.
 		severity = capi.ConditionSeverityWarning
-		warningMessage = fmt.Sprintf(" for more than %s", objectAge)
+		ageWarningMessage = fmt.Sprintf(" for more than %s", objectAge)
 	} else {
 		// Otherwise, if it has been less than 10 minutes since object's
 		// creation, probably everything is good, and we just have to wait few
@@ -52,7 +52,7 @@ func update(object objectWithInfrastructureRef, infrastructureObject capiconditi
 
 	if object.GetInfrastructureRef() == nil {
 		warningMessage :=
-			"Object %s/%s does not have infrastructure reference set%s"
+			"%s object %s/%s does not have infrastructure reference set%s"
 
 		capiconditions.MarkFalse(
 			object,
@@ -60,15 +60,18 @@ func update(object objectWithInfrastructureRef, infrastructureObject capiconditi
 			conditions.InfrastructureReferenceNotSetReason,
 			severity,
 			warningMessage,
-			object.GetNamespace(), object.GetName(), warningMessage)
+			object.GetObjectKind(),
+			object.GetNamespace(),
+			object.GetName(),
+			ageWarningMessage)
 
 		return
 	}
 
 	if infrastructureObject == nil {
 		warningMessage :=
-			"Corresponding provider-specific infrastructure object  " +
-				"is not found for specified object %s/%s%s"
+			"Corresponding provider-specific infrastructure object '%s/%s' " +
+				"is not found for %s object '%s/%s'%s"
 
 		capiconditions.MarkFalse(
 			object,
@@ -76,7 +79,12 @@ func update(object objectWithInfrastructureRef, infrastructureObject capiconditi
 			conditions.InfrastructureObjectNotFoundReason,
 			severity,
 			warningMessage,
-			object.GetNamespace(), object.GetName(), warningMessage)
+			object.GetInfrastructureRef().Namespace,
+			object.GetInfrastructureRef().Name,
+			object.GetObjectKind(),
+			object.GetNamespace(),
+			object.GetName(),
+			ageWarningMessage)
 
 		return
 	}
@@ -85,8 +93,11 @@ func update(object objectWithInfrastructureRef, infrastructureObject capiconditi
 		false,
 		capi.WaitingForInfrastructureFallbackReason,
 		severity,
-		fmt.Sprintf("Waiting for infrastructure object of type %T to have Ready condition set%s",
-			infrastructureObject, warningMessage))
+		fmt.Sprintf("Waiting for infrastructure object '%s/%s' of type %s to have Ready condition set%s",
+			object.GetInfrastructureRef().Namespace,
+			object.GetInfrastructureRef().Name,
+			object.GetInfrastructureRef().Kind,
+			ageWarningMessage))
 
 	capiconditions.SetMirror(object, capi.InfrastructureReadyCondition, infrastructureObject, fallbackToFalse)
 
