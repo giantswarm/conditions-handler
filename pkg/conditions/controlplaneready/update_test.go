@@ -106,11 +106,11 @@ func TestUpdateControlPlaneReady(t *testing.T) {
 			clusterAge:           2 * conditions.WaitingForControlPlaneWarningThresholdTime,
 			controlPlaneManifest: "controlplane-with-ready-false.yaml",
 			expectedCondition: capi.Condition{
-				Type:   capi.ControlPlaneReadyCondition,
-				Status: corev1.ConditionFalse,
-				Reason: "Something",
+				Type:     capi.ControlPlaneReadyCondition,
+				Status:   corev1.ConditionFalse,
+				Reason:   "Something",
 				Severity: capi.ConditionSeverityWarning,
-				Message: "TC control plane is not ready",
+				Message:  "TC control plane is not ready",
 			},
 		},
 		{
