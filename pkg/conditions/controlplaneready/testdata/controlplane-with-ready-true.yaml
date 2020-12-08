@@ -1,0 +1,11 @@
+apiVersion: cluster.x-k8s.io/v1alpha3
+kind: Machine
+metadata:
+  name: test1-cp-0
+  namespace: org-test
+spec:
+  clustername: test1
+status:
+  conditions:
+    - type: "Ready"
+      status: "True"
