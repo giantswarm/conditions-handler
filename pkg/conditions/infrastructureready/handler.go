@@ -6,13 +6,11 @@ import (
 	"github.com/giantswarm/conditions/pkg/conditions"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
-	capiexternal "sigs.k8s.io/cluster-api/controllers/external"
 	capiexp "sigs.k8s.io/cluster-api/exp/api/v1alpha3"
-	capiconditions "sigs.k8s.io/cluster-api/util/conditions"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/giantswarm/conditions-handler/pkg/errors"
 	"github.com/giantswarm/conditions-handler/pkg/internal"
 	"github.com/giantswarm/conditions-handler/pkg/key"
 )
@@ -79,39 +77,17 @@ func (h *Handler) ensureCreated(ctx context.Context, object conditions.Object) e
 		return microerror.Mask(err)
 	}
 
-	infrastructureObject, err := h.getInfrastructureObject(ctx, obj)
+	err = h.update(ctx, obj)
 	if err != nil {
 		return microerror.Mask(err)
 	}
 
-	update(obj, infrastructureObject)
 	return nil
-}
-
-func (h *Handler) getInfrastructureObject(ctx context.Context, object objectWithInfrastructureRef) (capiconditions.Getter, error) {
-	infrastructureRef := object.GetInfrastructureRef()
-	if infrastructureRef == nil {
-		// Infrastructure object is not set
-		return nil, nil
-	}
-
-	infrastructureObject, err := capiexternal.Get(ctx, h.ctrlClient, object.GetInfrastructureRef(), object.GetNamespace())
-	if apierrors.IsNotFound(err) {
-		// Infrastructure object is not found, here we don't care why
-		return nil, nil
-	} else if err != nil {
-		return nil, microerror.Mask(err)
-	}
-
-	// Wrap unstructured object into a capiconditions.Getter
-	infrastructureObjectGetter := capiconditions.UnstructuredGetter(infrastructureObject)
-
-	return infrastructureObjectGetter, nil
 }
 
 func toObjectWithInfrastructure(object conditions.Object) (objectWithInfrastructureRef, error) {
 	if object == nil {
-		return nil, microerror.Maskf(wrongTypeError, "expected non-nil conditions.Object, got nil '%T'", object)
+		return nil, microerror.Maskf(errors.WrongTypeError, "expected non-nil conditions.Object, got nil '%T'", object)
 	}
 
 	clusterPointer, ok := object.(*capi.Cluster)
@@ -124,5 +100,5 @@ func toObjectWithInfrastructure(object conditions.Object) (objectWithInfrastruct
 		return &machinePoolWrapper{machinePoolPointer}, nil
 	}
 
-	return nil, microerror.Maskf(wrongTypeError, "expected Cluster or MachinePool, got %T", object)
+	return nil, microerror.Maskf(errors.WrongTypeError, "expected Cluster or MachinePool, got %T", object)
 }

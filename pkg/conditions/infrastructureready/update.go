@@ -1,12 +1,18 @@
 package infrastructureready
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/giantswarm/conditions/pkg/conditions"
+	"github.com/giantswarm/microerror"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
+	capiexternal "sigs.k8s.io/cluster-api/controllers/external"
 	capiconditions "sigs.k8s.io/cluster-api/util/conditions"
+
+	"github.com/giantswarm/conditions-handler/pkg/errors"
 )
 
 const (
@@ -22,7 +28,7 @@ const (
 // If specified infrastructure object's Ready condition is not set, object
 // InfrastructureReady will be set with condition False and reason
 // WaitingForInfrastructure.
-func update(object objectWithInfrastructureRef, infrastructureObject capiconditions.Getter) {
+func (h *Handler) update(ctx context.Context, object objectWithInfrastructureRef) error {
 	// We need to remove already deprecated ProviderInfrastructureReady condition
 	// from clusters that are already upgraded to node pools release, as we are
 	// now using InfrastructureReady that is defined in the upstream Cluster API
@@ -65,10 +71,11 @@ func update(object objectWithInfrastructureRef, infrastructureObject capiconditi
 			object.GetName(),
 			ageWarningMessage)
 
-		return
+		return nil
 	}
 
-	if infrastructureObject == nil {
+	infrastructureObject, err := h.getInfrastructureObject(ctx, object)
+	if errors.IsFailedToRetrieveExternalObject(err) {
 		warningMessage :=
 			"Corresponding provider-specific infrastructure object '%s/%s' " +
 				"is not found for %s object '%s/%s'%s"
@@ -86,7 +93,9 @@ func update(object objectWithInfrastructureRef, infrastructureObject capiconditi
 			object.GetName(),
 			ageWarningMessage)
 
-		return
+		return nil
+	} else if err != nil {
+		return microerror.Mask(err)
 	}
 
 	fallbackToFalse := capiconditions.WithFallbackValue(
@@ -104,6 +113,7 @@ func update(object objectWithInfrastructureRef, infrastructureObject capiconditi
 	// Update deprecated status fields
 	infrastructureReady := conditions.IsInfrastructureReadyTrue(object)
 	object.SetStatusInfrastructureReady(infrastructureReady)
+	return nil
 }
 
 func removeDeprecatedProviderInfrastructureReadyCondition(object objectWithInfrastructureRef) {
@@ -122,4 +132,25 @@ func removeDeprecatedProviderInfrastructureReadyCondition(object objectWithInfra
 	}
 
 	object.SetConditions(filteredConditions)
+}
+
+func (h *Handler) getInfrastructureObject(ctx context.Context, object objectWithInfrastructureRef) (capiconditions.Getter, error) {
+	infrastructureRef := object.GetInfrastructureRef()
+	if infrastructureRef == nil {
+		// Infrastructure object is not set
+		return nil, nil
+	}
+
+	infrastructureObject, err := capiexternal.Get(ctx, h.ctrlClient, object.GetInfrastructureRef(), object.GetNamespace())
+	if apierrors.IsNotFound(err) {
+		// Infrastructure object is not found, here we don't care why
+		return nil, nil
+	} else if err != nil {
+		return nil, microerror.Mask(err)
+	}
+
+	// Wrap unstructured object into a capiconditions.Getter
+	infrastructureObjectGetter := capiconditions.UnstructuredGetter(infrastructureObject)
+
+	return infrastructureObjectGetter, nil
 }

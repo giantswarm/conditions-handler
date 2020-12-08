@@ -1,0 +1,9 @@
+apiVersion: mock.giantswarm.io/v1alpha1
+kind: MockProviderCluster
+metadata:
+  name: test1
+  namespace: org-test
+status:
+  conditions:
+    - type: "Ready"
+      status: "True"

@@ -2,7 +2,6 @@ package controlplaneready
 
 import (
 	"context"
-	"io/ioutil"
 	"path/filepath"
 	"testing"
 	"time"
@@ -13,11 +12,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"sigs.k8s.io/yaml"
 
 	"github.com/giantswarm/conditions-handler/pkg/internal"
 )
@@ -129,6 +125,7 @@ func TestUpdateControlPlaneReady(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// arrange
 			t.Log(tc.name)
+			ctx := context.Background()
 			client := newFakeClient()
 			handler, err := newControlPlaneReadyHandler(client)
 			if err != nil {
@@ -136,16 +133,16 @@ func TestUpdateControlPlaneReady(t *testing.T) {
 			}
 
 			// Create all objects required for the test scenario
-			ensureCRsExist(t, client, tc)
+			EnsureCRsExist(ctx, t, client, tc)
 
 			// get tested Cluster object
-			cluster, err := getTestedCluster(t, client, tc)
+			cluster, err := getTestedCluster(ctx, t, client, tc)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			// act
-			err = handler.update(context.Background(), cluster)
+			err = handler.update(ctx, cluster)
 			if err != nil {
 				t.Error(err)
 			}
@@ -194,113 +191,34 @@ func newControlPlaneReadyHandler(client ctrl.Client) (*Handler, error) {
 }
 
 func newFakeClient() ctrl.Client {
-	scheme := runtime.NewScheme()
-
-	err := capi.AddToScheme(scheme)
-	if err != nil {
-		panic(err)
-	}
-
-	return fake.NewFakeClientWithScheme(scheme)
+	return internal.NewFakeClient(capi.AddToScheme)
 }
 
-func loadCR(fName string) (runtime.Object, error) {
-	var err error
-	var obj runtime.Object
-
-	var bs []byte
-	{
-		bs, err = ioutil.ReadFile(filepath.Join("testdata", fName))
-		if err != nil {
-			return nil, microerror.Mask(err)
+func EnsureCRsExist(ctx context.Context, t *testing.T, client ctrl.Client, tc updateTestCase) {
+	clusterCRPath := filepath.Join("testdata", tc.clusterManifest)
+	err := internal.EnsureCRExist(ctx, t, client, clusterCRPath, func(o runtime.Object) {
+		cluster, ok := o.(*capi.Cluster)
+		if !ok {
+			t.Fatalf("couldn't cast object %T to Cluster", o)
 		}
-	}
-
-	// First parse kind.
-	t := &metav1.TypeMeta{}
-	err = yaml.Unmarshal(bs, t)
-	if err != nil {
-		return nil, microerror.Mask(err)
-	}
-
-	// Then construct correct CR object.
-	switch t.Kind {
-	case "Cluster":
-		obj = new(capi.Cluster)
-	case "Machine":
-		obj = new(capi.Machine)
-	default:
-		return nil, microerror.Maskf(unknownKindError, "kind: %s", t.Kind)
-	}
-
-	// ...and unmarshal the whole object.
-	err = yaml.Unmarshal(bs, obj)
-	if err != nil {
-		return nil, microerror.Mask(err)
-	}
-
-	return obj, nil
-}
-
-func ensureCRsExist(t *testing.T, client ctrl.Client, tc updateTestCase) {
-	// input Cluster object
-	o, err := loadCR(tc.clusterManifest)
+		cluster.CreationTimestamp = metav1.NewTime(time.Now().Add(-tc.clusterAge))
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	cluster, ok := o.(*capi.Cluster)
-	if !ok {
-		t.Fatalf("couldn't cast object %T to Cluster", o)
-	}
-	cluster.CreationTimestamp = metav1.NewTime(time.Now().Add(-tc.clusterAge))
 
-	err = client.Create(context.Background(), cluster)
-	if err != nil {
-		t.Fatalf("failed to create cluster from input file %s: %#v", tc.clusterManifest, err)
-	}
-
-	// input ControlPlane object
 	if tc.controlPlaneManifest == "" {
 		return
 	}
 
-	// input ControlPlane object
-	o, err = loadCR(tc.controlPlaneManifest)
+	controlPlaneCRPath := filepath.Join("testdata", tc.controlPlaneManifest)
+	err = internal.EnsureCRExist(ctx, t, client, controlPlaneCRPath, nil)
 	if err != nil {
 		t.Fatal(err)
-	}
-	controlPlane, ok := o.(*capi.Machine)
-	if !ok {
-		t.Fatalf("couldn't cast object %T to Machine", o)
-	}
-
-	err = client.Create(context.Background(), controlPlane)
-	if err != nil {
-		t.Fatalf("failed to create cluster from input file %s: %#v", tc.controlPlaneManifest, err)
 	}
 }
 
-func getTestedCluster(t *testing.T, client ctrl.Client, tc updateTestCase) (*capi.Cluster, error) {
-	// input Cluster object
-	o, err := loadCR(tc.clusterManifest)
-	if err != nil {
-		t.Fatal(err)
-	}
-	inputCluster, ok := o.(*capi.Cluster)
-	if !ok {
-		t.Fatalf("couldn't cast object %T to Cluster", o)
-	}
-
-	nsName := types.NamespacedName{
-		Namespace: inputCluster.Namespace,
-		Name:      inputCluster.Name,
-	}
-
-	cluster := &capi.Cluster{}
-	err = client.Get(context.Background(), nsName, cluster)
-	if err != nil {
-		t.Fatalf("err = %#q, want %#v", microerror.JSON(err), nil)
-	}
-
-	return cluster, nil
+func getTestedCluster(ctx context.Context, t *testing.T, client ctrl.Client, tc updateTestCase) (*capi.Cluster, error) {
+	clusterManifestPath := filepath.Join("testdata", tc.clusterManifest)
+	return internal.GetTestedCluster(ctx, t, client, clusterManifestPath)
 }

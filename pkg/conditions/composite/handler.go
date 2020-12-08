@@ -7,6 +7,7 @@ import (
 	"github.com/giantswarm/micrologger"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/giantswarm/conditions-handler/pkg/errors"
 	"github.com/giantswarm/conditions-handler/pkg/handler"
 )
 
@@ -27,16 +28,16 @@ type Handler struct {
 
 func NewHandler(config HandlerConfig) (*Handler, error) {
 	if config.CtrlClient == nil {
-		return nil, microerror.Maskf(invalidConfigError, "%T.CtrlClient must not be empty", config)
+		return nil, microerror.Maskf(errors.InvalidConfigError, "%T.CtrlClient must not be empty", config)
 	}
 	if config.Logger == nil {
-		return nil, microerror.Maskf(invalidConfigError, "%T.Logger must not be empty", config)
+		return nil, microerror.Maskf(errors.InvalidConfigError, "%T.Logger must not be empty", config)
 	}
 	if config.Name == "" {
-		return nil, microerror.Maskf(invalidConfigError, "%T.Name must not be empty", config)
+		return nil, microerror.Maskf(errors.InvalidConfigError, "%T.Name must not be empty", config)
 	}
 	if config.Handlers == nil {
-		return nil, microerror.Maskf(invalidConfigError, "%T.Handlers must not be empty", config)
+		return nil, microerror.Maskf(errors.InvalidConfigError, "%T.Handlers must not be empty", config)
 	}
 
 	h := &Handler{

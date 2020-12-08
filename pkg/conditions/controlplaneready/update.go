@@ -10,6 +10,8 @@ import (
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
 	capiexternal "sigs.k8s.io/cluster-api/controllers/external"
 	capiconditions "sigs.k8s.io/cluster-api/util/conditions"
+
+	"github.com/giantswarm/conditions-handler/pkg/errors"
 )
 
 // update sets ControlPlaneReady condition on specified
@@ -59,7 +61,7 @@ func (h *Handler) update(ctx context.Context, cluster *capi.Cluster) error {
 	}
 
 	controlPlaneObject, err := h.getControlPlaneObject(ctx, cluster)
-	if IsFailedToRetrieveExternalObject(err) {
+	if errors.IsFailedToRetrieveExternalObject(err) {
 		warningMessage :=
 			"Control plane object '%s/%s' of type %s is not found for specified Cluster object '%s/%s'%s"
 

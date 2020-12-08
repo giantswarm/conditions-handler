@@ -8,11 +8,13 @@ import (
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
 	capiexp "sigs.k8s.io/cluster-api/exp/api/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/giantswarm/conditions-handler/pkg/errors"
 )
 
 func ListMachinePoolsByMetadata(ctx context.Context, c client.Client, obj metav1.ObjectMeta) (*capiexp.MachinePoolList, error) {
 	if obj.Labels[capi.ClusterLabelName] == "" {
-		err := microerror.Maskf(invalidConfigError, "Label %q must not be empty for object %q", capi.ClusterLabelName, obj.GetSelfLink())
+		err := microerror.Maskf(errors.InvalidConfigError, "Label %q must not be empty for object %q", capi.ClusterLabelName, obj.GetSelfLink())
 		return nil, err
 	}
 

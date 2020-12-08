@@ -55,7 +55,7 @@ func NewHandler(config HandlerConfig) (*Handler, error) {
 }
 
 func (h *Handler) EnsureCreated(ctx context.Context, object interface{}) error {
-	cluster, err := key.ToCluster(object)
+	cluster, err := key.ToClusterPointer(object)
 	if err != nil {
 		return microerror.Mask(err)
 	}
@@ -72,7 +72,7 @@ func (h *Handler) Name() string {
 }
 
 func (h *Handler) ensureCreated(ctx context.Context, object conditions.Object) error {
-	cluster, err := key.ToCluster(object)
+	cluster, err := key.ToClusterPointer(object)
 	if err != nil {
 		return microerror.Mask(err)
 	}
