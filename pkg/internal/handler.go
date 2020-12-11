@@ -7,6 +7,8 @@ import (
 	"github.com/giantswarm/conditions/pkg/conditions"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
+
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
 	capiconditions "sigs.k8s.io/cluster-api/util/conditions"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
@@ -56,7 +58,7 @@ func NewHandler(config HandlerConfig) (*Handler, error) {
 
 func (h *Handler) EnsureCreated(ctx context.Context, object conditions.Object) (err error) {
 	if h.ensureCreatedFunc == nil {
-		return
+		return nil
 	}
 
 	if conditions.IsUnsupported(object, h.conditionType) {
@@ -66,18 +68,18 @@ func (h *Handler) EnsureCreated(ctx context.Context, object conditions.Object) (
 	}
 
 	initialConditionValue := capiconditions.Get(object, h.conditionType)
-	h.logDebug(ctx, "ensuring condition %s", sprintCondition(h.conditionType, initialConditionValue))
+	h.logger.Debugf(ctx, "ensuring condition %s", sprintCondition(h.conditionType, initialConditionValue))
 	var conditionChanged bool
 
 	defer func() {
 		if err == nil {
 			if conditionChanged {
-				h.logDebug(ctx, "ensured condition %s", sprintCondition(h.conditionType, initialConditionValue))
+				h.logger.Debugf(ctx, "ensured condition %s", sprintCondition(h.conditionType, initialConditionValue))
 			} else {
-				h.logDebug(ctx, "ensured condition %s, no change", h.conditionType)
+				h.logger.Debugf(ctx, "ensured condition %s, no change", h.conditionType)
 			}
 		} else {
-			h.logWarning(ctx, err, "an error occurred while ensuring condition %s", h.conditionType)
+			h.logger.Errorf(ctx, err, "an error occurred while ensuring condition %s", h.conditionType)
 		}
 	}()
 
@@ -91,12 +93,16 @@ func (h *Handler) EnsureCreated(ctx context.Context, object conditions.Object) (
 
 	if h.updateStatus {
 		err = h.ctrlClient.Status().Update(ctx, object)
-		if err != nil {
+		if apierrors.IsConflict(err) {
+			h.logger.Debugf(ctx, "conflict trying to save object in k8s API concurrently", "stack", microerror.JSON(microerror.Mask(err)))
+			h.logger.Debugf(ctx, "cancelling resource")
+			return nil
+		} else if err != nil {
 			return microerror.Mask(err)
 		}
 	}
 
-	return
+	return nil
 }
 
 func (h *Handler) EnsureDeleted(_ context.Context, _ conditions.Object) (err error) {
@@ -105,14 +111,6 @@ func (h *Handler) EnsureDeleted(_ context.Context, _ conditions.Object) (err err
 	}
 
 	return nil
-}
-
-func (h *Handler) logDebug(ctx context.Context, message string, messageArgs ...interface{}) {
-	h.logger.LogCtx(ctx, "level", "debug", "message", fmt.Sprintf(message, messageArgs...))
-}
-
-func (h *Handler) logWarning(ctx context.Context, err error, message string, messageArgs ...interface{}) {
-	h.logger.LogCtx(ctx, "level", "warning", "message", fmt.Sprintf(message, messageArgs...), "error", err)
 }
 
 func sprintCondition(conditionType capi.ConditionType, condition *capi.Condition) string {
