@@ -25,7 +25,7 @@ func MarkUpgradingFalseWithUpgradeCompleted(object conditions.Object) {
 	currentUpgradingCondition := capiconditions.Get(object, conditions.Upgrading)
 	if currentUpgradingCondition != nil {
 		upgradeDuration := time.Since(currentUpgradingCondition.LastTransitionTime.Time)
-		upgradeTimeMessage = fmt.Sprintf("in %s", upgradeDuration)
+		upgradeTimeMessage = fmt.Sprintf(" in %s", upgradeDuration)
 	} else {
 		upgradeTimeMessage = ", but upgrade duration cannot be determined"
 	}
