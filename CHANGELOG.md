@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Bump `github.com/giantswarm/micrologger` to `v0.4.0` 
+- Use new logger functions `Debugf` and `Errorf`.
+- Handle API conflict errors.
+
 ## [0.1.0] - 2020-12-08
 
 - Generic condition handler for summarizing conditions into a single summary condition.
