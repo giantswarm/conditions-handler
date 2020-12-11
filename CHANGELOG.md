@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2020-12-11
+
 ### Changed
 
 - Bump `github.com/giantswarm/micrologger` to `v0.4.0` 
@@ -23,5 +25,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Condition handlers for `Cluster` `ControlPlaneReady` and `NodePoolsReady` conditions.
 - Factory functions for creating `Cluster` and `MachinePool` conditions handlers that can be then used in an operator out of the box.
 
-[Unreleased]: https://github.com/giantswarm/conditions-handler/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/giantswarm/conditions-handler/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/giantswarm/conditions-handler/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/giantswarm/conditions-handler/releases/tag/v0.1.0
