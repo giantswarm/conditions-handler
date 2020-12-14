@@ -128,6 +128,8 @@ github.com/giantswarm/conditions v0.2.0 h1:sOS319rNgfRl/LuzeEmCcyjYa8V4GCtR4Ntwy
 github.com/giantswarm/conditions v0.2.0/go.mod h1:Bp0zSox1MdFV20MTvjXOr8li+v11OLX/8kponaIGVrw=
 github.com/giantswarm/microerror v0.2.1 h1:4y88WstqZ4OSSq6T/TvTJaefRe/JbrbuwoWQNVxOOyU=
 github.com/giantswarm/microerror v0.2.1/go.mod h1:1YtJq/m7Vlq1Y6NP7B+SODOKCGlG7e5wctV2OoE9n34=
+github.com/giantswarm/microerror v0.3.0 h1:V/9cXlIEddNGaRYiA0vYJmgM2+sTQy+k8M7kVjOy4XM=
+github.com/giantswarm/microerror v0.3.0/go.mod h1:g8oCEMFAoEs70riRRmj9+6eiz7SqNxYl+2OfxFh1po0=
 github.com/giantswarm/micrologger v0.4.0 h1:2EpnX86HKpqUNY8C4qbB2SzniB4bgES8Cd/mYrVyOrI=
 github.com/giantswarm/micrologger v0.4.0/go.mod h1:xsD5laBXORMy/P34IHZMK0y/D1gTkYtASUL4gUm5KN4=
 github.com/globalsign/mgo v0.0.0-20180905125535-1ca0a4f7cbcb/go.mod h1:xkRDCp4j0OGD1HRkm4kmhM+pmpv3AKq5SU7GMg4oO/Q=
