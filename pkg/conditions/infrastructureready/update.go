@@ -3,7 +3,6 @@ package infrastructureready
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/giantswarm/conditions/pkg/conditions"
 	"github.com/giantswarm/microerror"
@@ -35,41 +34,22 @@ func (h *Handler) update(ctx context.Context, object objectWithInfrastructureRef
 	// project.
 	removeDeprecatedProviderInfrastructureReadyCondition(object)
 
-	objectAge := time.Since(object.GetCreationTimestamp().Time)
-	var severity capi.ConditionSeverity
-	ageWarningMessage := ""
-	if objectAge > conditions.WaitingForInfrastructureWarningThresholdTime {
-		// Infrastructure reference should be set and provider-specific
-		// infrastructure object should then be reconciled soon after it has
-		// been created, which will set its Ready condition.
-		// If that does not happen within 10 minutes, that means that something
-		// might be wrong, so we set object's InfrastructureReady condition with
-		// severity Warning.
-		severity = capi.ConditionSeverityWarning
-		ageWarningMessage = fmt.Sprintf(" for more than %s", objectAge)
-	} else {
-		// Otherwise, if it has been less than 10 minutes since object's
-		// creation, probably everything is good, and we just have to wait few
-		// more minutes.
-		// Note: Upstream Cluster API implementation always just sets severity
-		// Info when infrastructure object's Ready condition is not set.
-		severity = capi.ConditionSeverityInfo
-	}
+	gvk := object.GetObjectKind().GroupVersionKind()
+	gvkString := fmt.Sprintf("%s (%s)", gvk.Kind, gvk.GroupVersion().String())
 
 	if object.GetInfrastructureRef() == nil {
 		warningMessage :=
-			"%s object %s/%s does not have infrastructure reference set%s"
+			"%s object '%s/%s' does not have infrastructure reference set"
 
 		capiconditions.MarkFalse(
 			object,
 			capi.InfrastructureReadyCondition,
 			conditions.InfrastructureReferenceNotSetReason,
-			severity,
+			capi.ConditionSeverityWarning,
 			warningMessage,
-			object.GetObjectKind(),
+			gvkString,
 			object.GetNamespace(),
-			object.GetName(),
-			ageWarningMessage)
+			object.GetName())
 
 		return nil
 	}
@@ -78,20 +58,19 @@ func (h *Handler) update(ctx context.Context, object objectWithInfrastructureRef
 	if errors.IsFailedToRetrieveExternalObject(err) {
 		warningMessage :=
 			"Corresponding provider-specific infrastructure object '%s/%s' " +
-				"is not found for %s object '%s/%s'%s"
+				"is not found for %s object '%s/%s'"
 
 		capiconditions.MarkFalse(
 			object,
 			capi.InfrastructureReadyCondition,
 			conditions.InfrastructureObjectNotFoundReason,
-			severity,
+			capi.ConditionSeverityWarning,
 			warningMessage,
 			object.GetInfrastructureRef().Namespace,
 			object.GetInfrastructureRef().Name,
-			object.GetObjectKind(),
+			gvkString,
 			object.GetNamespace(),
-			object.GetName(),
-			ageWarningMessage)
+			object.GetName())
 
 		return nil
 	} else if err != nil {
@@ -101,12 +80,11 @@ func (h *Handler) update(ctx context.Context, object objectWithInfrastructureRef
 	fallbackToFalse := capiconditions.WithFallbackValue(
 		false,
 		capi.WaitingForInfrastructureFallbackReason,
-		severity,
-		fmt.Sprintf("Waiting for infrastructure object '%s/%s' of type %s to have Ready condition set%s",
+		capi.ConditionSeverityWarning,
+		fmt.Sprintf("Waiting for infrastructure object '%s/%s' of kind %s to have Ready condition set",
 			object.GetInfrastructureRef().Namespace,
 			object.GetInfrastructureRef().Name,
-			object.GetInfrastructureRef().Kind,
-			ageWarningMessage))
+			object.GetInfrastructureRef().Kind))
 
 	capiconditions.SetMirror(object, capi.InfrastructureReadyCondition, infrastructureObject, fallbackToFalse)
 
