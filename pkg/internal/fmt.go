@@ -1,8 +1,12 @@
 package internal
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 
+	"github.com/giantswarm/microerror"
+	"github.com/giantswarm/micrologger"
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
 )
 
@@ -21,4 +25,14 @@ func SprintComparedCondition(condition *capi.Condition) string {
 	}
 
 	return text
+}
+
+func LogObjectJson(ctx context.Context, logger micrologger.Logger, obj interface{}) error {
+	objJson, err := json.Marshal(obj)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
+	logger.Debugf(ctx, "Object JSON: %s", objJson)
+	return nil
 }

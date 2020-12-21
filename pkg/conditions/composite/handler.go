@@ -9,6 +9,8 @@ import (
 
 	"github.com/giantswarm/conditions-handler/pkg/errors"
 	"github.com/giantswarm/conditions-handler/pkg/handler"
+	"github.com/giantswarm/conditions-handler/pkg/internal"
+	"github.com/giantswarm/conditions-handler/pkg/key"
 )
 
 type HandlerConfig struct {
@@ -52,8 +54,24 @@ func NewHandler(config HandlerConfig) (*Handler, error) {
 
 func (h *Handler) EnsureCreated(ctx context.Context, object interface{}) error {
 	var err error
+
+	err = internal.LogObjectJson(ctx, h.logger, object)
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
 	for _, handler := range h.handlers {
 		err = handler.EnsureCreated(ctx, object)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+
+		objWithConditions, err := key.ToObjectWithConditions(object)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+
+		err = internal.LogObjectJson(ctx, h.logger, objWithConditions.GetConditions())
 		if err != nil {
 			return microerror.Mask(err)
 		}
