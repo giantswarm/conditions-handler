@@ -49,7 +49,7 @@ func TestUpdateInfrastructureReady(t *testing.T) {
 			},
 		},
 		{
-			name:                   "case 2: Cluster with infrastructure ref and infrastructure object w/o Ready",
+			name:                   "case 2: Cluster with infrastructure ref and infrastructure object without Ready",
 			clusterManifest:        "cluster-with-infrastructureref.yaml",
 			infrastructureManifest: "infrastructure-without-ready.yaml",
 			expectedCondition: capi.Condition{

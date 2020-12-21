@@ -11,7 +11,6 @@ import (
 	"github.com/giantswarm/micrologger"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -21,7 +20,6 @@ import (
 type updateTestCase struct {
 	name                 string
 	clusterManifest      string
-	clusterAge           time.Duration
 	controlPlaneManifest string
 	expectedCondition    capi.Condition
 }
@@ -29,77 +27,42 @@ type updateTestCase struct {
 func TestUpdateControlPlaneReady(t *testing.T) {
 	testCases := []updateTestCase{
 		{
-			name:            "case 0: For For 5min old Cluster without control plane reference, it sets ControlPlaneReady status to False, Severity=Info, Reason=ControlPlaneReferenceNotSet",
+			name:            "case 0: Cluster without control plane reference",
 			clusterManifest: "cluster-without-controlplaneref.yaml",
-			clusterAge:      conditions.WaitingForControlPlaneWarningThresholdTime / 2,
-			expectedCondition: capi.Condition{
-				Type:     capi.ControlPlaneReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: capi.ConditionSeverityInfo,
-				Reason:   conditions.ControlPlaneReferenceNotSetReason,
-			},
-		},
-		{
-			name:            "case 1: For For 20min old Cluster without control plane reference, it sets ControlPlaneReady status to False, Severity=Warning, Reason=ControlPlaneReferenceNotSet",
-			clusterManifest: "cluster-without-controlplaneref.yaml",
-			clusterAge:      2 * conditions.WaitingForControlPlaneWarningThresholdTime,
 			expectedCondition: capi.Condition{
 				Type:     capi.ControlPlaneReadyCondition,
 				Status:   corev1.ConditionFalse,
 				Severity: capi.ConditionSeverityWarning,
 				Reason:   conditions.ControlPlaneReferenceNotSetReason,
+				Message:  "Control plane reference is not set for specified Cluster (cluster.x-k8s.io/v1alpha3) object 'org-test/test1'",
 			},
 		},
 		{
-			name:            "case 2: For 5min old Cluster with control plane reference and control plane object not found, it sets ControlPlaneReady status to False, Severity=Info, Reason=ControlPlaneObjectNotFound",
+			name:            "case 1: Cluster with control plane reference and control plane object not found",
 			clusterManifest: "cluster-with-controlplaneref.yaml",
-			clusterAge:      conditions.WaitingForControlPlaneWarningThresholdTime / 2,
-			expectedCondition: capi.Condition{
-				Type:     capi.ControlPlaneReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: capi.ConditionSeverityInfo,
-				Reason:   conditions.ControlPlaneObjectNotFoundReason,
-			},
-		},
-		{
-			name:            "case 3: For 20min old Cluster with control plane reference and control plane object not found, it sets ControlPlaneReady status to False, Severity=Warning, Reason=ControlPlaneObjectNotFound",
-			clusterManifest: "cluster-with-controlplaneref.yaml",
-			clusterAge:      2 * conditions.WaitingForControlPlaneWarningThresholdTime,
 			expectedCondition: capi.Condition{
 				Type:     capi.ControlPlaneReadyCondition,
 				Status:   corev1.ConditionFalse,
 				Severity: capi.ConditionSeverityWarning,
 				Reason:   conditions.ControlPlaneObjectNotFoundReason,
+				Message:  "Control plane object 'org-test/test1-cp-0' of kind Machine is not found for specified Cluster (cluster.x-k8s.io/v1alpha3) object 'org-test/test1'",
 			},
 		},
 		{
-			name:                 "case 4: For 5min old Cluster and control plane object w/o Ready, it sets ControlPlaneReady status to False, Severity=Info, Reason=WaitingForControlPlaneFallback",
+			name:                 "case 2: Cluster with control plane reference and control plane object without Ready",
 			clusterManifest:      "cluster-with-controlplaneref.yaml",
-			clusterAge:           conditions.WaitingForControlPlaneWarningThresholdTime / 2,
-			controlPlaneManifest: "controlplane-without-ready.yaml",
-			expectedCondition: capi.Condition{
-				Type:     capi.ControlPlaneReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: capi.ConditionSeverityInfo,
-				Reason:   capi.WaitingForControlPlaneFallbackReason,
-			},
-		},
-		{
-			name:                 "case 5: For 20min old Cluster and control plane object w/o Ready, it sets ControlPlaneReady status to False, Severity=Warning, Reason=WaitingForControlPlaneFallback",
-			clusterManifest:      "cluster-with-controlplaneref.yaml",
-			clusterAge:           2 * conditions.WaitingForControlPlaneWarningThresholdTime,
 			controlPlaneManifest: "controlplane-without-ready.yaml",
 			expectedCondition: capi.Condition{
 				Type:     capi.ControlPlaneReadyCondition,
 				Status:   corev1.ConditionFalse,
 				Severity: capi.ConditionSeverityWarning,
 				Reason:   capi.WaitingForControlPlaneFallbackReason,
+				Message:  "Waiting for control plane object 'org-test/test1-cp-0' of kind Machine to have Ready condition set",
 			},
 		},
 		{
-			name:                 "case 6: For control plane object w/ Ready(Status=False), it sets ControlPlaneReady(Status=False)",
+			name:                 "case 3: Cluster with control plane reference and control plane object with Ready(Status=False)",
 			clusterManifest:      "cluster-with-controlplaneref.yaml",
-			clusterAge:           2 * conditions.WaitingForControlPlaneWarningThresholdTime,
 			controlPlaneManifest: "controlplane-with-ready-false.yaml",
 			expectedCondition: capi.Condition{
 				Type:     capi.ControlPlaneReadyCondition,
@@ -110,9 +73,8 @@ func TestUpdateControlPlaneReady(t *testing.T) {
 			},
 		},
 		{
-			name:                 "case 7: For control plane object w/ Ready(Status=True), it sets ControlPlaneReady(Status=True)",
+			name:                 "case 4: Cluster with control plane reference and control plane object with Ready(Status=True)",
 			clusterManifest:      "cluster-with-controlplaneref.yaml",
-			clusterAge:           2 * conditions.WaitingForControlPlaneWarningThresholdTime,
 			controlPlaneManifest: "controlplane-with-ready-true.yaml",
 			expectedCondition: capi.Condition{
 				Type:   capi.ControlPlaneReadyCondition,
@@ -141,20 +103,45 @@ func TestUpdateControlPlaneReady(t *testing.T) {
 				t.Fatal(err)
 			}
 
+			// Note: Truncating to match Cluster API behaviour.
+			timeBeforeUpdate := metav1.NewTime(time.Now().UTC().Truncate(time.Second))
+
 			// act
 			err = handler.update(ctx, cluster)
 			if err != nil {
 				t.Error(err)
 			}
 
+			timeAfterUpdate := metav1.NewTime(time.Now().UTC().Truncate(time.Second))
+
 			// assert
 			controlPlaneReady, ok := conditions.GetControlPlaneReady(cluster)
 			if ok {
-				if !conditions.AreEquivalent(&controlPlaneReady, &tc.expectedCondition) {
+				// First let's check of conditions are equal (all fields except
+				// LastTransitionTime, since we cannot know the exact time when
+				// the condition will be updated).
+				if !internal.AreEqualWithIgnoringLastTransitionTime(&controlPlaneReady, &tc.expectedCondition) {
 					t.Logf(
 						"ControlPlaneReady was not set correctly, got %s, expected %s",
 						internal.SprintComparedCondition(&controlPlaneReady),
 						internal.SprintComparedCondition(&tc.expectedCondition))
+					t.Fail()
+				}
+
+				// Now let's check approximately if the condition's last transition
+				// time is within expected time range.
+				//
+				// Expected order of timestamps:
+				//   timeBeforeUpdate <= infrastructureReady.LastTransitionTime <= timeAfterUpdate
+				//
+				// beforeCondition := timeBeforeUpdate <= infrastructureReady.LastTransitionTime
+				// afterCondition := infrastructureReady.LastTransitionTime <= timeAfterUpdate
+				lastTransitionTime := controlPlaneReady.LastTransitionTime
+				beforeCheck := timeBeforeUpdate.Before(&lastTransitionTime) || timeBeforeUpdate.Equal(&lastTransitionTime)
+				afterCheck := lastTransitionTime.Before(&timeAfterUpdate) || lastTransitionTime.Equal(&timeAfterUpdate)
+
+				if !(beforeCheck && afterCheck) {
+					t.Logf("InfrastructureReady LastTransitionTime is not correct, expected %s <= %s <= %s", timeBeforeUpdate, lastTransitionTime, timeAfterUpdate)
 					t.Fail()
 				}
 			} else {
@@ -196,13 +183,7 @@ func newFakeClient() ctrl.Client {
 
 func EnsureCRsExist(ctx context.Context, t *testing.T, client ctrl.Client, tc updateTestCase) {
 	clusterCRPath := filepath.Join("testdata", tc.clusterManifest)
-	err := internal.EnsureCRExist(ctx, t, client, clusterCRPath, func(o runtime.Object) {
-		cluster, ok := o.(*capi.Cluster)
-		if !ok {
-			t.Fatalf("couldn't cast object %T to Cluster", o)
-		}
-		cluster.CreationTimestamp = metav1.NewTime(time.Now().Add(-tc.clusterAge))
-	})
+	err := internal.EnsureCRExist(ctx, t, client, clusterCRPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -212,7 +193,7 @@ func EnsureCRsExist(ctx context.Context, t *testing.T, client ctrl.Client, tc up
 	}
 
 	controlPlaneCRPath := filepath.Join("testdata", tc.controlPlaneManifest)
-	err = internal.EnsureCRExist(ctx, t, client, controlPlaneCRPath, nil)
+	err = internal.EnsureCRExist(ctx, t, client, controlPlaneCRPath)
 	if err != nil {
 		t.Fatal(err)
 	}
