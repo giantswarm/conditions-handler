@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Simplified `InfrastructureReady` condition update, not checking object age and
+  using only severity `Warning` when there is an issue.
+- Simplified `ControlPlaneReady` condition update, not checking object age and
+  using only severity `Warning` when there is an issue.
+
 ## [0.1.1] - 2020-12-11
 
 ### Changed
