@@ -6,6 +6,7 @@ import (
 	"github.com/giantswarm/conditions/pkg/conditions"
 	"github.com/giantswarm/microerror"
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
+	capiexp "sigs.k8s.io/cluster-api/exp/api/v1alpha3"
 
 	"github.com/giantswarm/conditions-handler/pkg/errors"
 	"github.com/giantswarm/conditions-handler/pkg/internal"
@@ -23,6 +24,19 @@ func ToClusterPointer(v interface{}) (*capi.Cluster, error) {
 	customObjectPointer, ok := v.(*capi.Cluster)
 	if !ok {
 		return nil, microerror.Maskf(errors.WrongTypeError, "expected '%T', got '%T'", &capi.Cluster{}, v)
+	}
+
+	return customObjectPointer, nil
+}
+
+func ToMachinePoolPointer(v interface{}) (*capiexp.MachinePool, error) {
+	if v == nil {
+		return nil, microerror.Maskf(errors.WrongTypeError, "expected '%T', got nil", &capiexp.MachinePool{})
+	}
+
+	customObjectPointer, ok := v.(*capiexp.MachinePool)
+	if !ok {
+		return nil, microerror.Maskf(errors.WrongTypeError, "expected '%T', got '%T'", &capiexp.MachinePool{}, v)
 	}
 
 	return customObjectPointer, nil
