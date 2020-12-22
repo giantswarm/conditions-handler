@@ -4,7 +4,9 @@ import (
 	"context"
 	"io/ioutil"
 	"testing"
+	"time"
 
+	"github.com/giantswarm/conditions/pkg/conditions"
 	"github.com/giantswarm/microerror"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -16,6 +18,20 @@ import (
 
 	"github.com/giantswarm/conditions-handler/pkg/errors"
 )
+
+// AreEqualWithIgnoringLastTransitionTime is checking if two conditions are have
+// all fields equal, except LastTransitionTime.
+func AreEqualWithIgnoringLastTransitionTime(c1, c2 *capi.Condition) bool {
+	dummyLastTransition := metav1.NewTime(time.Now())
+
+	condition1 := *c1
+	condition1.LastTransitionTime = dummyLastTransition
+
+	condition2 := *c2
+	condition2.LastTransitionTime = dummyLastTransition
+
+	return conditions.AreEqual(&condition1, &condition2)
+}
 
 func LoadCR(manifestPath string) (runtime.Object, error) {
 	var err error
@@ -57,13 +73,10 @@ func LoadCR(manifestPath string) (runtime.Object, error) {
 	return obj, nil
 }
 
-func EnsureCRExist(ctx context.Context, t *testing.T, client ctrl.Client, manifestPath string, modifier func(object runtime.Object)) error {
+func EnsureCRExist(ctx context.Context, t *testing.T, client ctrl.Client, manifestPath string) error {
 	o, err := LoadCR(manifestPath)
 	if err != nil {
 		return microerror.Mask(err)
-	}
-	if modifier != nil {
-		modifier(o)
 	}
 
 	err = client.Create(ctx, o)

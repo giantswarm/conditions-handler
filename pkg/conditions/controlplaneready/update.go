@@ -3,7 +3,6 @@ package controlplaneready
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/giantswarm/conditions/pkg/conditions"
 	"github.com/giantswarm/microerror"
@@ -24,38 +23,22 @@ import (
 // ControlPlaneReady will be set with condition False and reason
 // WaitingForControlPlane.
 func (h *Handler) update(ctx context.Context, cluster *capi.Cluster) error {
-	clusterAge := time.Since(cluster.GetCreationTimestamp().Time)
-	var severity capi.ConditionSeverity
-	ageWarningMessage := ""
-	if clusterAge > conditions.WaitingForControlPlaneWarningThresholdTime {
-		// Control plane should be reconciled soon after it has been created.
-		// If it's Ready condition is not set within 10 minutes, that means
-		// that something might be wrong, so we set object's ControlPlaneReady
-		// condition with severity Warning.
-		severity = capi.ConditionSeverityWarning
-		ageWarningMessage = fmt.Sprintf(" for more than %s", clusterAge)
-	} else {
-		// Otherwise, if it has been less than 10 minutes since object's
-		// creation, probably everything is good, and we just have to wait few
-		// more minutes.
-		// Note: Upstream Cluster API implementation always just sets severity
-		// Info when control plane object's Ready condition is not set.
-		severity = capi.ConditionSeverityInfo
-	}
+	gvk := cluster.GetObjectKind().GroupVersionKind()
+	gvkString := fmt.Sprintf("%s (%s)", gvk.Kind, gvk.GroupVersion().String())
 
 	if cluster.Spec.ControlPlaneRef == nil {
 		warningMessage :=
-			"Control plane reference is not set for specified Cluster object '%s/%s'%s"
+			"Control plane reference is not set for specified %s object '%s/%s'"
 
 		capiconditions.MarkFalse(
 			cluster,
 			capi.ControlPlaneReadyCondition,
 			conditions.ControlPlaneReferenceNotSetReason,
-			severity,
+			capi.ConditionSeverityWarning,
 			warningMessage,
+			gvkString,
 			cluster.GetNamespace(),
-			cluster.GetName(),
-			ageWarningMessage)
+			cluster.GetName())
 
 		return nil
 	}
@@ -63,20 +46,20 @@ func (h *Handler) update(ctx context.Context, cluster *capi.Cluster) error {
 	controlPlaneObject, err := h.getControlPlaneObject(ctx, cluster)
 	if errors.IsFailedToRetrieveExternalObject(err) {
 		warningMessage :=
-			"Control plane object '%s/%s' of type %s is not found for specified Cluster object '%s/%s'%s"
+			"Control plane object '%s/%s' of kind %s is not found for specified %s object '%s/%s'"
 
 		capiconditions.MarkFalse(
 			cluster,
 			capi.ControlPlaneReadyCondition,
 			conditions.ControlPlaneObjectNotFoundReason,
-			severity,
+			capi.ConditionSeverityWarning,
 			warningMessage,
 			cluster.Spec.ControlPlaneRef.Namespace,
 			cluster.Spec.ControlPlaneRef.Name,
 			cluster.Spec.ControlPlaneRef.Kind,
+			gvkString,
 			cluster.GetNamespace(),
-			cluster.GetName(),
-			ageWarningMessage)
+			cluster.GetName())
 
 		return nil
 	} else if err != nil {
@@ -86,12 +69,11 @@ func (h *Handler) update(ctx context.Context, cluster *capi.Cluster) error {
 	fallbackToFalse := capiconditions.WithFallbackValue(
 		false,
 		capi.WaitingForControlPlaneFallbackReason,
-		severity,
-		fmt.Sprintf("Waiting for control plane object '%s/%s' of type %s to have Ready condition set%s",
+		capi.ConditionSeverityWarning,
+		fmt.Sprintf("Waiting for control plane object '%s/%s' of kind %s to have Ready condition set",
 			cluster.Spec.ControlPlaneRef.Namespace,
 			cluster.Spec.ControlPlaneRef.Name,
-			cluster.Spec.ControlPlaneRef.Kind,
-			ageWarningMessage))
+			cluster.Spec.ControlPlaneRef.Kind))
 
 	capiconditions.SetMirror(cluster, capi.ControlPlaneReadyCondition, controlPlaneObject, fallbackToFalse)
 

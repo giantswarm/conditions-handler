@@ -11,7 +11,6 @@ import (
 	"github.com/giantswarm/micrologger"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -21,7 +20,6 @@ import (
 type updateTestCase struct {
 	name                   string
 	clusterManifest        string
-	clusterAge             time.Duration
 	infrastructureManifest string
 	expectedCondition      capi.Condition
 }
@@ -29,75 +27,41 @@ type updateTestCase struct {
 func TestUpdateInfrastructureReady(t *testing.T) {
 	testCases := []updateTestCase{
 		{
-			name:            "case 0: For 5min old cluster without infrastructure ref, it sets InfrastructureReady(Status=False, Severity=Info, Reason=InfrastructureObjectNotSet)",
+			name:            "case 0: Cluster without infrastructure ref",
 			clusterManifest: "cluster-without-infrastructureref.yaml",
-			clusterAge:      conditions.WaitingForControlPlaneWarningThresholdTime / 2,
-			expectedCondition: capi.Condition{
-				Type:     capi.InfrastructureReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: capi.ConditionSeverityInfo,
-				Reason:   conditions.InfrastructureReferenceNotSetReason,
-			},
-		},
-		{
-			name:            "case 1: For 20min old cluster without infrastructure ref, it sets InfrastructureReady(Status=False, Severity=Warning, Reason=InfrastructureObjectNotSet)",
-			clusterManifest: "cluster-without-infrastructureref.yaml",
-			clusterAge:      2 * conditions.WaitingForControlPlaneWarningThresholdTime,
 			expectedCondition: capi.Condition{
 				Type:     capi.InfrastructureReadyCondition,
 				Status:   corev1.ConditionFalse,
 				Severity: capi.ConditionSeverityWarning,
 				Reason:   conditions.InfrastructureReferenceNotSetReason,
+				Message:  "Cluster (cluster.x-k8s.io/v1alpha3) object 'org-test/test1' does not have infrastructure reference set",
 			},
 		},
 		{
-			name:            "case 2: For 5min old cluster and nil infrastructure object, it sets InfrastructureReady(Status=False, Severity=Info, Reason=InfrastructureObjectNotFound)",
+			name:            "case 1: Cluster with infrastructure ref and infrastructure object not found",
 			clusterManifest: "cluster-with-infrastructureref.yaml",
-			clusterAge:      conditions.WaitingForControlPlaneWarningThresholdTime / 2,
-			expectedCondition: capi.Condition{
-				Type:     capi.InfrastructureReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: capi.ConditionSeverityInfo,
-				Reason:   conditions.InfrastructureObjectNotFoundReason,
-			},
-		},
-		{
-			name:            "case 3: For 20min old cluster and nil infrastructure object, it sets InfrastructureReady(Status=False, Severity=Warning, Reason=InfrastructureObjectNotFound)",
-			clusterManifest: "cluster-with-infrastructureref.yaml",
-			clusterAge:      2 * conditions.WaitingForControlPlaneWarningThresholdTime,
 			expectedCondition: capi.Condition{
 				Type:     capi.InfrastructureReadyCondition,
 				Status:   corev1.ConditionFalse,
 				Severity: capi.ConditionSeverityWarning,
 				Reason:   conditions.InfrastructureObjectNotFoundReason,
+				Message:  "Corresponding provider-specific infrastructure object 'org-test/test1' is not found for Cluster (cluster.x-k8s.io/v1alpha3) object 'org-test/test1'",
 			},
 		},
 		{
-			name:                   "case 4: For 5min old Cluster and infrastructure object w/o Ready, it sets InfrastructureReady(Status=False, Severity=Info, Reason=WaitingForInfrastructureFallback)",
+			name:                   "case 2: Cluster with infrastructure ref and infrastructure object without Ready",
 			clusterManifest:        "cluster-with-infrastructureref.yaml",
-			clusterAge:             conditions.WaitingForControlPlaneWarningThresholdTime / 2,
-			infrastructureManifest: "infrastructure-without-ready.yaml",
-			expectedCondition: capi.Condition{
-				Type:     capi.InfrastructureReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: capi.ConditionSeverityInfo,
-				Reason:   capi.WaitingForInfrastructureFallbackReason,
-			},
-		},
-		{
-			name:                   "case 5: For 20min old Cluster and infrastructure object w/o Ready, it sets InfrastructureReady status to False, Severity=Warning, Reason=WaitingForInfrastructureFallback",
-			clusterManifest:        "cluster-with-infrastructureref.yaml",
-			clusterAge:             2 * conditions.WaitingForControlPlaneWarningThresholdTime,
 			infrastructureManifest: "infrastructure-without-ready.yaml",
 			expectedCondition: capi.Condition{
 				Type:     capi.InfrastructureReadyCondition,
 				Status:   corev1.ConditionFalse,
 				Severity: capi.ConditionSeverityWarning,
 				Reason:   capi.WaitingForInfrastructureFallbackReason,
+				Message:  "Waiting for infrastructure object 'org-test/test1' of kind MockProviderCluster to have Ready condition set",
 			},
 		},
 		{
-			name:                   "case 6: For infrastructure object w/ Ready(Status=False), it sets InfrastructureReady(Status=False)",
+			name:                   "case 3: Cluster with infrastructure ref and infrastructure object with Ready(Status=False)",
 			clusterManifest:        "cluster-with-infrastructureref.yaml",
 			infrastructureManifest: "infrastructure-with-ready-false.yaml",
 			expectedCondition: capi.Condition{
@@ -109,7 +73,7 @@ func TestUpdateInfrastructureReady(t *testing.T) {
 			},
 		},
 		{
-			name:                   "case 7: For infrastructure object w/ Ready(Status=True), it sets InfrastructureReady(Status=True)",
+			name:                   "case 4: Cluster with infrastructure ref and infrastructure object with Ready(Status=True)",
 			clusterManifest:        "cluster-with-infrastructureref.yaml",
 			infrastructureManifest: "infrastructure-with-ready-true.yaml",
 			expectedCondition: capi.Condition{
@@ -139,20 +103,45 @@ func TestUpdateInfrastructureReady(t *testing.T) {
 				t.Fatal(err)
 			}
 
+			// Note: Truncating to match Cluster API behaviour.
+			timeBeforeUpdate := metav1.NewTime(time.Now().UTC().Truncate(time.Second))
+
 			// act
 			err = handler.update(ctx, &clusterWrapper{cluster})
 			if err != nil {
 				t.Fatal(err)
 			}
 
+			timeAfterUpdate := metav1.NewTime(time.Now().UTC().Truncate(time.Second))
+
 			// assert
 			infrastructureReady, ok := conditions.GetInfrastructureReady(cluster)
 			if ok {
-				if !conditions.AreEquivalent(&infrastructureReady, &tc.expectedCondition) {
+				// First let's check of conditions are equal (all fields except
+				// LastTransitionTime, since we cannot know the exact time when
+				// the condition will be updated).
+				if !internal.AreEqualWithIgnoringLastTransitionTime(&infrastructureReady, &tc.expectedCondition) {
 					t.Logf(
 						"InfrastructureReady was not set correctly, got %s, expected %s",
 						internal.SprintComparedCondition(&infrastructureReady),
 						internal.SprintComparedCondition(&tc.expectedCondition))
+					t.Fail()
+				}
+
+				// Now let's check approximately if the condition's last transition
+				// time is within expected time range.
+				//
+				// Expected order of timestamps:
+				//   timeBeforeUpdate <= infrastructureReady.LastTransitionTime <= timeAfterUpdate
+				//
+				// beforeCondition := timeBeforeUpdate <= infrastructureReady.LastTransitionTime
+				// afterCondition := infrastructureReady.LastTransitionTime <= timeAfterUpdate
+				lastTransitionTime := infrastructureReady.LastTransitionTime
+				beforeCheck := timeBeforeUpdate.Before(&lastTransitionTime) || timeBeforeUpdate.Equal(&lastTransitionTime)
+				afterCheck := lastTransitionTime.Before(&timeAfterUpdate) || lastTransitionTime.Equal(&timeAfterUpdate)
+
+				if !(beforeCheck && afterCheck) {
+					t.Logf("InfrastructureReady LastTransitionTime is not correct, expected %s <= %s <= %s", timeBeforeUpdate, lastTransitionTime, timeAfterUpdate)
 					t.Fail()
 				}
 			} else {
@@ -165,13 +154,7 @@ func TestUpdateInfrastructureReady(t *testing.T) {
 
 func EnsureCRsExist(ctx context.Context, t *testing.T, client ctrl.Client, tc updateTestCase) {
 	clusterCRPath := filepath.Join("testdata", tc.clusterManifest)
-	err := internal.EnsureCRExist(ctx, t, client, clusterCRPath, func(o runtime.Object) {
-		cluster, ok := o.(*capi.Cluster)
-		if !ok {
-			t.Fatalf("couldn't cast object %T to Cluster", o)
-		}
-		cluster.CreationTimestamp = metav1.NewTime(time.Now().Add(-tc.clusterAge))
-	})
+	err := internal.EnsureCRExist(ctx, t, client, clusterCRPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -181,7 +164,7 @@ func EnsureCRsExist(ctx context.Context, t *testing.T, client ctrl.Client, tc up
 	}
 
 	infrastructureManifestPath := filepath.Join("testdata", tc.infrastructureManifest)
-	err = internal.EnsureCRExist(ctx, t, client, infrastructureManifestPath, nil)
+	err = internal.EnsureCRExist(ctx, t, client, infrastructureManifestPath)
 	if err != nil {
 		t.Fatal(err)
 	}
