@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New handler that is setting `MachinePool` `ReplicasReady` condition. It uses almost same logic to set the condition as the upstream Cluster API controller.
+
+### Changed
+
+- `MachinePool` `Ready` condition is now summarizing `ReplicasReady` and `InfrastructureReady`, so both Kubernetes nodes and Azure infrastructure are taken into account.
+- Added new `ReplicasReady` condition handler to the default `MachinePool` composite handler that is used in `azure-operator`.
+
 ## [0.1.2] - 2020-12-22
 
 ### Changed
