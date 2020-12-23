@@ -38,7 +38,7 @@ func update(machinePool *capiexp.MachinePool) {
 			machinePool.Status.ReadyReplicas,
 			machinePool.Status.Replicas,
 			len(machinePool.Status.NodeRefs),
-			machinePool.Status.ReadyReplicas)
+			machinePool.Status.Replicas)
 		return
 	}
 

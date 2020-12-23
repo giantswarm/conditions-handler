@@ -24,5 +24,10 @@ status:
   availableReplicas: 1
   bootstrapReady: false
   infrastructureReady: true
+  nodeRefs:
+    - name: nodepool-4nfz5-000006
+      uid: 1f5990d4-1370-4556-9ac4-3f40e9454dd9
+    - name: nodepool-4nfz5-000007
+      uid: 6af6b555-e73f-49ac-885a-ae6f9ed4be80
   readyReplicas: 1
   replicas: 3

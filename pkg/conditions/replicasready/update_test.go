@@ -39,7 +39,7 @@ func TestUpdate(t *testing.T) {
 				Status:   corev1.ConditionFalse,
 				Severity: capi.ConditionSeverityWarning,
 				Reason:   capiexp.WaitingForReplicasReadyReason,
-				Message:  "1/3 replicas are ready, 0/1 node references set",
+				Message:  "1/3 replicas are ready, 2/3 node references set",
 			},
 		},
 		{
