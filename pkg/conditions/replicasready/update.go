@@ -20,6 +20,7 @@ func update(machinePool *capiexp.MachinePool) {
 			"Desired number of replicas is %d, but found %d",
 			desiredReplicas,
 			machinePool.Status.Replicas)
+		return
 	}
 
 	// We have found the desired number of replicas.
@@ -33,10 +34,11 @@ func update(machinePool *capiexp.MachinePool) {
 			capiexp.ReplicasReadyCondition,
 			capiexp.WaitingForReplicasReadyReason,
 			capi.ConditionSeverityWarning,
-			"%d/%d replicas are ready, %d node references set",
+			"%d/%d replicas are ready, %d/%d node references set",
 			machinePool.Status.ReadyReplicas,
 			machinePool.Status.Replicas,
-			len(machinePool.Status.NodeRefs))
+			len(machinePool.Status.NodeRefs),
+			machinePool.Status.ReadyReplicas)
 		return
 	}
 
