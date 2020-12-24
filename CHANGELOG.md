@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- New handler that is setting `MachinePool` `ReplicasReady` condition. It uses almost same logic to set the condition as the upstream Cluster API controller.
+- New handler that is setting `MachinePool` `ReplicasReady` condition.
 
 ### Changed
 
