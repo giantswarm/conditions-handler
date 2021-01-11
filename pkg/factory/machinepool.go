@@ -3,10 +3,12 @@ package factory
 import (
 	"github.com/giantswarm/microerror"
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
+	capiexp "sigs.k8s.io/cluster-api/exp/api/v1alpha3"
 
 	"github.com/giantswarm/conditions-handler/pkg/conditions/composite"
 	"github.com/giantswarm/conditions-handler/pkg/conditions/creating"
 	"github.com/giantswarm/conditions-handler/pkg/conditions/infrastructureready"
+	"github.com/giantswarm/conditions-handler/pkg/conditions/replicasready"
 	"github.com/giantswarm/conditions-handler/pkg/conditions/summary"
 	"github.com/giantswarm/conditions-handler/pkg/conditions/upgrading"
 	"github.com/giantswarm/conditions-handler/pkg/handler"
@@ -32,6 +34,20 @@ func NewMachinePoolConditionsHandler(config handler.Config) (*composite.Handler,
 		}
 	}
 
+	var replicasReadyHandler *replicasready.Handler
+	{
+		c := replicasready.HandlerConfig{
+			CtrlClient:   config.CtrlClient,
+			Logger:       config.Logger,
+			Name:         "machinePoolReplicasReadyHandler",
+			UpdateStatus: false,
+		}
+		replicasReadyHandler, err = replicasready.NewHandler(c)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
 	var readyHandler *summary.Handler
 	{
 		c := summary.HandlerConfig{
@@ -41,6 +57,7 @@ func NewMachinePoolConditionsHandler(config handler.Config) (*composite.Handler,
 			SummaryConditionType: capi.ReadyCondition,
 			ConditionsToSummarize: []capi.ConditionType{
 				capi.InfrastructureReadyCondition,
+				capiexp.ReplicasReadyCondition,
 			},
 			Name: "machinePoolReadyHandler",
 		}
@@ -89,6 +106,7 @@ func NewMachinePoolConditionsHandler(config handler.Config) (*composite.Handler,
 			Name:       config.Name,
 			Handlers: []handler.Interface{
 				infrastructureReadyHandler,
+				replicasReadyHandler,
 				readyHandler,
 				creatingHandler,
 				upgradingHandler,

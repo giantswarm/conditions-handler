@@ -12,6 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
+	capiexp "sigs.k8s.io/cluster-api/exp/api/v1alpha3"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/yaml"
@@ -58,6 +59,8 @@ func LoadCR(manifestPath string) (runtime.Object, error) {
 		obj = new(capi.Cluster)
 	case "Machine":
 		obj = new(capi.Machine)
+	case "MachinePool":
+		obj = new(capiexp.MachinePool)
 	case "MockProviderCluster":
 		obj = new(MockProviderCluster)
 	default:
