@@ -7,25 +7,11 @@ import (
 )
 
 func update(machinePool *capiexp.MachinePool) {
-	// If value is not specified when MachinePool CR is created, the default
-	// value is ensured in azure-admission-controller.
-	desiredReplicas := *machinePool.Spec.Replicas
-
-	if desiredReplicas > machinePool.Status.Replicas {
-		capiconditions.MarkFalse(
-			machinePool,
-			capiexp.ReplicasReadyCondition,
-			capiexp.WaitingForReplicasReadyReason,
-			capi.ConditionSeverityWarning,
-			"Desired number of replicas is %d, but found %d",
-			desiredReplicas,
-			machinePool.Status.Replicas)
+	if len(machinePool.Spec.ProviderIDList) == 0 {
 		return
 	}
 
-	// We have found the desired number of replicas.
-
-	// Now check if all found nodes are ready or not, and if all node references
+	// Check if all found nodes are ready or not, and if all node references
 	// are set.
 	if machinePool.Status.Replicas != machinePool.Status.ReadyReplicas ||
 		len(machinePool.Status.NodeRefs) != int(machinePool.Status.ReadyReplicas) {

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `MachinePool` `ReplicasReady` is not always true in clusters with cluster-autoscaler enabled.
+
 ## [0.2.0] - 2021-01-11
 
 ### Added

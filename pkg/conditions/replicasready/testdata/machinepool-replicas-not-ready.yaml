@@ -8,6 +8,10 @@ spec:
   failureDomains:
     - "2"
   replicas: 3
+  providerIDList:
+    - "azure:///subscriptions/123456789/resourceGroups/12345/providers/Microsoft.Compute/virtualMachineScaleSets/nodepool-4nfz5/virtualMachines/6"
+    - "azure:///subscriptions/123456789/resourceGroups/12345/providers/Microsoft.Compute/virtualMachineScaleSets/nodepool-4nfz5/virtualMachines/7"
+    - "azure:///subscriptions/123456789/resourceGroups/12345/providers/Microsoft.Compute/virtualMachineScaleSets/nodepool-4nfz5/virtualMachines/8"
   template:
     metadata: {}
     spec:
