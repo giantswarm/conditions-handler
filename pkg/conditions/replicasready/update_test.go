@@ -15,26 +15,19 @@ import (
 type updateTestCase struct {
 	name                string
 	machinePoolManifest string
-	expectedCondition   capi.Condition
+	expectedCondition   *capi.Condition
 }
 
 func TestUpdate(t *testing.T) {
 	testCases := []updateTestCase{
 		{
-			name:                "0: MachinePool with Spec.Replicas greater than Status.Replicas (not all replicas are discovered)",
+			name:                "0: MachinePool with Spec.ProviderIDList not set",
 			machinePoolManifest: "machinepool-desired-gt-observed.yaml",
-			expectedCondition: capi.Condition{
-				Type:     capiexp.ReplicasReadyCondition,
-				Status:   corev1.ConditionFalse,
-				Severity: capi.ConditionSeverityWarning,
-				Reason:   capiexp.WaitingForReplicasReadyReason,
-				Message:  "Desired number of replicas is 3, but found 1",
-			},
 		},
 		{
 			name:                "1: MachinePool with Status.Replicas greater than Status.ReadyReplicas (not all replicas are ready)",
 			machinePoolManifest: "machinepool-replicas-not-ready.yaml",
-			expectedCondition: capi.Condition{
+			expectedCondition: &capi.Condition{
 				Type:     capiexp.ReplicasReadyCondition,
 				Status:   corev1.ConditionFalse,
 				Severity: capi.ConditionSeverityWarning,
@@ -45,7 +38,7 @@ func TestUpdate(t *testing.T) {
 		{
 			name:                "2: MachinePool with Status.NodeRef not fully set",
 			machinePoolManifest: "machinepool-noderefs-not-set.yaml",
-			expectedCondition: capi.Condition{
+			expectedCondition: &capi.Condition{
 				Type:     capiexp.ReplicasReadyCondition,
 				Status:   corev1.ConditionFalse,
 				Severity: capi.ConditionSeverityWarning,
@@ -56,7 +49,7 @@ func TestUpdate(t *testing.T) {
 		{
 			name:                "3: MachinePool with replicas ready",
 			machinePoolManifest: "machinepool-replicasready-true.yaml",
-			expectedCondition: capi.Condition{
+			expectedCondition: &capi.Condition{
 				Type:   capiexp.ReplicasReadyCondition,
 				Status: corev1.ConditionTrue,
 			},
@@ -73,18 +66,23 @@ func TestUpdate(t *testing.T) {
 			update(&machinePool)
 			replicasReady := capiconditions.Get(&machinePool, capiexp.ReplicasReadyCondition)
 
+			if replicasReady == nil && tc.expectedCondition == nil {
+				// all good
+				return
+			}
+
 			// assert
 			if replicasReady == nil {
 				t.Logf(
 					"Condition %s not set, expected %s",
 					capiexp.ReplicasReadyCondition,
-					internal.SprintComparedCondition(&tc.expectedCondition))
+					internal.SprintComparedCondition(tc.expectedCondition))
 				t.Fail()
 			} else {
-				if !internal.AreEqualWithIgnoringLastTransitionTime(replicasReady, &tc.expectedCondition) {
+				if !internal.AreEqualWithIgnoringLastTransitionTime(replicasReady, tc.expectedCondition) {
 					t.Logf(
 						"expected %s, got %s",
-						internal.SprintComparedCondition(&tc.expectedCondition),
+						internal.SprintComparedCondition(tc.expectedCondition),
 						internal.SprintComparedCondition(replicasReady))
 					t.Fail()
 				}
