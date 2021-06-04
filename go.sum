@@ -126,11 +126,10 @@ github.com/giantswarm/cluster-api v0.3.10-gs h1:l2LpZlN97t7RRwKf4OBfNA2h1oVnZXWC
 github.com/giantswarm/cluster-api v0.3.10-gs/go.mod h1:878STePVJcBNDYFY2eCsLuHXWs6qiH3INFItEwdfWaE=
 github.com/giantswarm/conditions v0.3.0 h1:sv6b2dVXns2oT1VJ2UIuflJo24cC7EPXD7tdwPEYFkU=
 github.com/giantswarm/conditions v0.3.0/go.mod h1:tFjYCLTT5NBJU+PYij0360yBHzETIpw3wnrettuzdsw=
-github.com/giantswarm/microerror v0.2.1/go.mod h1:1YtJq/m7Vlq1Y6NP7B+SODOKCGlG7e5wctV2OoE9n34=
 github.com/giantswarm/microerror v0.3.0 h1:V/9cXlIEddNGaRYiA0vYJmgM2+sTQy+k8M7kVjOy4XM=
 github.com/giantswarm/microerror v0.3.0/go.mod h1:g8oCEMFAoEs70riRRmj9+6eiz7SqNxYl+2OfxFh1po0=
-github.com/giantswarm/micrologger v0.4.0 h1:2EpnX86HKpqUNY8C4qbB2SzniB4bgES8Cd/mYrVyOrI=
-github.com/giantswarm/micrologger v0.4.0/go.mod h1:xsD5laBXORMy/P34IHZMK0y/D1gTkYtASUL4gUm5KN4=
+github.com/giantswarm/micrologger v0.5.0 h1:/f2knkyf4bZw3L5F48R7VENiEKPb3Sjnzrg46+Ja5vk=
+github.com/giantswarm/micrologger v0.5.0/go.mod h1:J/jbt7A8eixqE40yq4JY8Hdbs/qeboe2FjHlq05UWjA=
 github.com/globalsign/mgo v0.0.0-20180905125535-1ca0a4f7cbcb/go.mod h1:xkRDCp4j0OGD1HRkm4kmhM+pmpv3AKq5SU7GMg4oO/Q=
 github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8/go.mod h1:xkRDCp4j0OGD1HRkm4kmhM+pmpv3AKq5SU7GMg4oO/Q=
 github.com/go-acme/lego v2.5.0+incompatible/go.mod h1:yzMNe9CasVUhkquNvti5nAtPmG94USbYxYrZfTkIn0M=
