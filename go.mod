@@ -8,7 +8,7 @@ require (
 	github.com/giantswarm/micrologger v0.5.0
 	k8s.io/api v0.18.19
 	k8s.io/apimachinery v0.18.19
-	sigs.k8s.io/cluster-api v0.3.10
+	sigs.k8s.io/cluster-api v0.3.19
 	sigs.k8s.io/controller-runtime v0.6.4
 	sigs.k8s.io/yaml v1.2.0
 )
