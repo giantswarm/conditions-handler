@@ -7,7 +7,7 @@ import (
 	"github.com/giantswarm/conditions/pkg/conditions"
 	"github.com/giantswarm/microerror"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
+	capi "sigs.k8s.io/cluster-api/api/v1beta1"
 	capiexternal "sigs.k8s.io/cluster-api/controllers/external"
 	capiconditions "sigs.k8s.io/cluster-api/util/conditions"
 

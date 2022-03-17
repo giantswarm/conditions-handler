@@ -6,7 +6,7 @@ import (
 
 	"github.com/giantswarm/conditions/pkg/conditions"
 	"github.com/giantswarm/microerror"
-	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
+	capi "sigs.k8s.io/cluster-api/api/v1beta1"
 	capiexternal "sigs.k8s.io/cluster-api/controllers/external"
 	capiconditions "sigs.k8s.io/cluster-api/util/conditions"
 
@@ -79,9 +79,6 @@ func (h *Handler) update(ctx context.Context, cluster *capi.Cluster) error {
 
 	// Update deprecated status fields
 	cluster.Status.ControlPlaneReady = conditions.IsControlPlaneReadyTrue(cluster)
-	if !cluster.Status.ControlPlaneInitialized {
-		cluster.Status.ControlPlaneInitialized = cluster.Status.ControlPlaneReady
-	}
 
 	return nil
 }

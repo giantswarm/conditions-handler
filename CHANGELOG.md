@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update cluster-api to v1.0.5.
+
 ## [0.2.1] - 2021-01-27
 
 ### Fixed

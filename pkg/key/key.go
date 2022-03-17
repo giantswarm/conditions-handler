@@ -5,8 +5,8 @@ import (
 
 	"github.com/giantswarm/conditions/pkg/conditions"
 	"github.com/giantswarm/microerror"
-	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
-	capiexp "sigs.k8s.io/cluster-api/exp/api/v1alpha3"
+	capi "sigs.k8s.io/cluster-api/api/v1beta1"
+	capiexp "sigs.k8s.io/cluster-api/exp/api/v1beta1"
 
 	"github.com/giantswarm/conditions-handler/pkg/errors"
 	"github.com/giantswarm/conditions-handler/pkg/internal"

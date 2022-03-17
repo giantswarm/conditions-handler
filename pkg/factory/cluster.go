@@ -4,7 +4,7 @@ import (
 	"github.com/giantswarm/conditions/pkg/conditions"
 	"github.com/giantswarm/microerror"
 	corev1 "k8s.io/api/core/v1"
-	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
+	capi "sigs.k8s.io/cluster-api/api/v1beta1"
 
 	"github.com/giantswarm/conditions-handler/pkg/conditions/composite"
 	"github.com/giantswarm/conditions-handler/pkg/conditions/controlplaneready"
