@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/giantswarm/conditions v0.3.0
-	github.com/giantswarm/microerror v0.3.0
+	github.com/giantswarm/microerror v0.4.0
 	github.com/giantswarm/micrologger v0.5.0
 	k8s.io/api v0.18.19
 	k8s.io/apimachinery v0.18.19
