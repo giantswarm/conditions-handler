@@ -34,7 +34,7 @@ func TestUpdateInfrastructureReady(t *testing.T) {
 				Status:   corev1.ConditionFalse,
 				Severity: capi.ConditionSeverityWarning,
 				Reason:   conditions.InfrastructureReferenceNotSetReason,
-				Message:  "Cluster (cluster.x-k8s.io/v1alpha3) object 'org-test/test1' does not have infrastructure reference set",
+				Message:  "Cluster (cluster.x-k8s.io/v1beta1) object 'org-test/test1' does not have infrastructure reference set",
 			},
 		},
 		{
@@ -45,7 +45,7 @@ func TestUpdateInfrastructureReady(t *testing.T) {
 				Status:   corev1.ConditionFalse,
 				Severity: capi.ConditionSeverityWarning,
 				Reason:   conditions.InfrastructureObjectNotFoundReason,
-				Message:  "Corresponding provider-specific infrastructure object 'org-test/test1' is not found for Cluster (cluster.x-k8s.io/v1alpha3) object 'org-test/test1'",
+				Message:  "Corresponding provider-specific infrastructure object 'org-test/test1' is not found for Cluster (cluster.x-k8s.io/v1beta1) object 'org-test/test1'",
 			},
 		},
 		{

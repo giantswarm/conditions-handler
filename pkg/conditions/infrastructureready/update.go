@@ -55,7 +55,7 @@ func (h *Handler) update(ctx context.Context, object objectWithInfrastructureRef
 	}
 
 	infrastructureObject, err := h.getInfrastructureObject(ctx, object)
-	if errors.IsFailedToRetrieveExternalObject(err) {
+	if errors.IsFailedToRetrieveExternalObject(err) || apierrors.IsNotFound(err) {
 		warningMessage :=
 			"Corresponding provider-specific infrastructure object '%s/%s' " +
 				"is not found for %s object '%s/%s'"
@@ -120,10 +120,7 @@ func (h *Handler) getInfrastructureObject(ctx context.Context, object objectWith
 	}
 
 	infrastructureObject, err := capiexternal.Get(ctx, h.ctrlClient, object.GetInfrastructureRef(), object.GetNamespace())
-	if apierrors.IsNotFound(err) {
-		// Infrastructure object is not found, here we don't care why
-		return nil, nil
-	} else if err != nil {
+	if err != nil {
 		return nil, microerror.Mask(err)
 	}
 
