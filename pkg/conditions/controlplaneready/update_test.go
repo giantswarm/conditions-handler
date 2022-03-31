@@ -11,7 +11,7 @@ import (
 	"github.com/giantswarm/micrologger"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
+	capi "sigs.k8s.io/cluster-api/api/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/giantswarm/conditions-handler/pkg/internal"
@@ -34,7 +34,7 @@ func TestUpdateControlPlaneReady(t *testing.T) {
 				Status:   corev1.ConditionFalse,
 				Severity: capi.ConditionSeverityWarning,
 				Reason:   conditions.ControlPlaneReferenceNotSetReason,
-				Message:  "Control plane reference is not set for specified Cluster (cluster.x-k8s.io/v1alpha3) object 'org-test/test1'",
+				Message:  "Control plane reference is not set for specified Cluster (cluster.x-k8s.io/v1beta1) object 'org-test/test1'",
 			},
 		},
 		{
@@ -45,7 +45,7 @@ func TestUpdateControlPlaneReady(t *testing.T) {
 				Status:   corev1.ConditionFalse,
 				Severity: capi.ConditionSeverityWarning,
 				Reason:   conditions.ControlPlaneObjectNotFoundReason,
-				Message:  "Control plane object 'org-test/test1-cp-0' of kind Machine is not found for specified Cluster (cluster.x-k8s.io/v1alpha3) object 'org-test/test1'",
+				Message:  "Control plane object 'org-test/test1-cp-0' of kind Machine is not found for specified Cluster (cluster.x-k8s.io/v1beta1) object 'org-test/test1'",
 			},
 		},
 		{

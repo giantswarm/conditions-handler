@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 
-	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
+	capi "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
 func SprintComparedCondition(condition *capi.Condition) string {

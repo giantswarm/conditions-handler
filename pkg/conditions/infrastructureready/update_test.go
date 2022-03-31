@@ -11,7 +11,7 @@ import (
 	"github.com/giantswarm/micrologger"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
+	capi "sigs.k8s.io/cluster-api/api/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/giantswarm/conditions-handler/pkg/internal"
@@ -34,7 +34,7 @@ func TestUpdateInfrastructureReady(t *testing.T) {
 				Status:   corev1.ConditionFalse,
 				Severity: capi.ConditionSeverityWarning,
 				Reason:   conditions.InfrastructureReferenceNotSetReason,
-				Message:  "Cluster (cluster.x-k8s.io/v1alpha3) object 'org-test/test1' does not have infrastructure reference set",
+				Message:  "Cluster (cluster.x-k8s.io/v1beta1) object 'org-test/test1' does not have infrastructure reference set",
 			},
 		},
 		{
@@ -45,7 +45,7 @@ func TestUpdateInfrastructureReady(t *testing.T) {
 				Status:   corev1.ConditionFalse,
 				Severity: capi.ConditionSeverityWarning,
 				Reason:   conditions.InfrastructureObjectNotFoundReason,
-				Message:  "Corresponding provider-specific infrastructure object 'org-test/test1' is not found for Cluster (cluster.x-k8s.io/v1alpha3) object 'org-test/test1'",
+				Message:  "Corresponding provider-specific infrastructure object 'org-test/test1' is not found for Cluster (cluster.x-k8s.io/v1beta1) object 'org-test/test1'",
 			},
 		},
 		{

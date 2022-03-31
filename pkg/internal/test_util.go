@@ -11,8 +11,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	capi "sigs.k8s.io/cluster-api/api/v1alpha3"
-	capiexp "sigs.k8s.io/cluster-api/exp/api/v1alpha3"
+	capi "sigs.k8s.io/cluster-api/api/v1beta1"
+	capiexp "sigs.k8s.io/cluster-api/exp/api/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/yaml"
@@ -34,9 +34,9 @@ func AreEqualWithIgnoringLastTransitionTime(c1, c2 *capi.Condition) bool {
 	return conditions.AreEqual(&condition1, &condition2)
 }
 
-func LoadCR(manifestPath string) (runtime.Object, error) {
+func LoadCR(manifestPath string) (ctrl.Object, error) {
 	var err error
-	var obj runtime.Object
+	var obj ctrl.Object
 
 	var bs []byte
 	{
@@ -99,7 +99,7 @@ func NewFakeClient(addToSchemeFuncs ...func(s *runtime.Scheme) error) ctrl.Clien
 		}
 	}
 
-	return fake.NewFakeClientWithScheme(scheme)
+	return fake.NewClientBuilder().WithScheme(scheme).Build()
 }
 
 func GetTestedCluster(ctx context.Context, t *testing.T, client ctrl.Client, manifestPath string) (*capi.Cluster, error) {
