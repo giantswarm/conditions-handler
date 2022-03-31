@@ -3,7 +3,7 @@ module github.com/giantswarm/conditions-handler
 go 1.17
 
 require (
-	github.com/giantswarm/conditions v0.4.1-0.20220317210012-57ab9a66aebf
+	github.com/giantswarm/conditions v0.5.0
 	github.com/giantswarm/microerror v0.4.0
 	github.com/giantswarm/micrologger v0.6.0
 	k8s.io/api v0.22.2
