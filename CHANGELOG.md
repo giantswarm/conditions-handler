@@ -11,7 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Update cluster-api to v1.0.5.
+- Update github.com/giantswarm/conditions to v0.5.0
+- Update github.com/giantswarm/microerror to v0.4.0
+- Update github.com/giantswarm/micrologger to v0.6.0
+- Update k8s.io/api to v0.22.2
+- Update k8s.io/apimachinery to v0.22.2
+- Update sigs.k8s.io/cluster-api to v1.0.5
+- Update sigs.k8s.io/controller-runtime to v0.10.3
+- Update sigs.k8s.io/yaml to v1.3.0
+- Update architect to v4.15.0
 
 ## [0.2.1] - 2021-01-27
 
