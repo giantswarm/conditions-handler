@@ -99,7 +99,7 @@ func NewFakeClient(addToSchemeFuncs ...func(s *runtime.Scheme) error) ctrl.Clien
 		}
 	}
 
-	return fake.NewFakeClientWithScheme(scheme)
+	return fake.NewClientBuilder().WithScheme(scheme).Build()
 }
 
 func GetTestedCluster(ctx context.Context, t *testing.T, client ctrl.Client, manifestPath string) (*capi.Cluster, error) {
