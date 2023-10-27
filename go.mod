@@ -69,5 +69,5 @@ require (
 replace (
 	github.com/coreos/etcd v3.3.13+incompatible => github.com/coreos/etcd v3.3.27+incompatible
 	github.com/dgrijalva/jwt-go => github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
-	github.com/go-logr/logr => github.com/go-logr/logr v0.4.0
+	github.com/go-logr/logr => github.com/go-logr/logr v1.3.0
 )
