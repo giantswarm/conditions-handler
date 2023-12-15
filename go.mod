@@ -6,8 +6,8 @@ require (
 	github.com/giantswarm/conditions v0.5.0
 	github.com/giantswarm/microerror v0.4.0
 	github.com/giantswarm/micrologger v0.6.0
-	k8s.io/api v0.22.2
-	k8s.io/apimachinery v0.22.2
+	k8s.io/api v0.29.0
+	k8s.io/apimachinery v0.29.0
 	sigs.k8s.io/cluster-api v1.0.5
 	sigs.k8s.io/controller-runtime v0.10.3
 	sigs.k8s.io/yaml v1.3.0
